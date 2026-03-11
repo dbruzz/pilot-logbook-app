@@ -1,0 +1,85 @@
+export const es = {
+    common: {
+        loading: 'Cargando...',
+        save: 'Guardar',
+        cancel: 'Cancelar',
+        delete: 'Eliminar',
+        edit: 'Editar',
+        error: 'Ocurrió un error',
+        success: 'Éxito',
+    },
+    auth: {
+        login: 'Iniciar Sesión',
+        signup: 'Registrarse',
+        email: 'Correo Electrónico',
+        password: 'Contraseña',
+        logout: 'Cerrar Sesión',
+        noAccount: '¿No tienes cuenta? Regístrate',
+        hasAccount: '¿Ya tienes cuenta? Inicia sesión',
+    },
+    nav: {
+        dashboard: 'Dashboard',
+        goals: 'Metas',
+        logs: 'Registros',
+        settings: 'Ajustes',
+        aircrafts: 'Aeronaves',
+    },
+    dashboard: {
+        totalHours: 'Horas Totales',
+        focusGoal: 'Meta Principal',
+        activeGoals: 'Metas Activas',
+        recentFlights: 'Vuelos Recientes',
+        noFlights: 'No hay vuelos recientes',
+        noFocusGoal: 'No hay meta principal establecida',
+    },
+    goals: {
+        title: 'Metas',
+        addGoal: 'Nueva Meta',
+        targetMinutes: 'Tiempo Objetivo',
+        hours: 'Horas',
+        minutes: 'Minutos',
+        setFocus: 'Establecer Principal',
+        status: {
+            active: 'Activa',
+            paused: 'Pausada',
+            completed: 'Completada',
+            archived: 'Archivada'
+        }
+    },
+    logs: {
+        title: 'Registro de Vuelos',
+        addLog: 'Nuevo Vuelo',
+        date: 'Fecha',
+        duration: 'Duración (HH:MM)',
+        aircraft: 'Aeronave',
+        isInstruction: 'Vuelo de Instrucción',
+        from: 'Origen',
+        to: 'Destino',
+        notes: 'Notas',
+    },
+    settings: {
+        title: 'Ajustes',
+        profile: 'Perfil',
+        name: 'Nombre',
+        lastName: 'Apellido',
+        birthdate: 'Fecha de Nacimiento',
+        preferences: 'Preferencias',
+        language: 'Idioma',
+        theme: {
+            label: 'Tema',
+            light: 'Claro',
+            dark: 'Oscuro',
+            system: 'Sistema'
+        },
+        notifications: 'Notificaciones',
+    },
+    aircrafts: {
+        title: 'Mis Aeronaves',
+        addAircraft: 'Nueva Aeronave',
+        description: 'Descripción / Nombre',
+        registration: 'Matrícula (Opcional)',
+        model: 'Modelo (Opcional)',
+        category: 'Categoría',
+        noAircrafts: 'No tienes aeronaves registradas',
+    }
+}

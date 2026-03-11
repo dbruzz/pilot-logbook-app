@@ -1,0 +1,85 @@
+export const en = {
+    common: {
+        loading: 'Loading...',
+        save: 'Save',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        edit: 'Edit',
+        error: 'An error occurred',
+        success: 'Success',
+    },
+    auth: {
+        login: 'Log In',
+        signup: 'Sign Up',
+        email: 'Email',
+        password: 'Password',
+        logout: 'Log Out',
+        noAccount: "Don't have an account? Sign up",
+        hasAccount: 'Already have an account? Log in',
+    },
+    nav: {
+        dashboard: 'Dashboard',
+        goals: 'Goals',
+        logs: 'Flight Logs',
+        settings: 'Settings',
+        aircrafts: 'Aircrafts',
+    },
+    dashboard: {
+        totalHours: 'Total Hours',
+        focusGoal: 'Focus Goal',
+        activeGoals: 'Active Goals',
+        recentFlights: 'Recent Flights',
+        noFlights: 'No recent flights',
+        noFocusGoal: 'No focus goal set',
+    },
+    goals: {
+        title: 'Goals',
+        addGoal: 'New Goal',
+        targetMinutes: 'Target Time',
+        hours: 'Hours',
+        minutes: 'Minutes',
+        setFocus: 'Set as Focus',
+        status: {
+            active: 'Active',
+            paused: 'Paused',
+            completed: 'Completed',
+            archived: 'Archived'
+        }
+    },
+    logs: {
+        title: 'Flight Logs',
+        addLog: 'New Flight',
+        date: 'Date',
+        duration: 'Duration (HH:MM)',
+        aircraft: 'Aircraft',
+        isInstruction: 'Instruction Flight',
+        from: 'From',
+        to: 'To',
+        notes: 'Notes',
+    },
+    settings: {
+        title: 'Settings',
+        profile: 'Profile',
+        name: 'First Name',
+        lastName: 'Last Name',
+        birthdate: 'Birthdate',
+        preferences: 'Preferences',
+        language: 'Language',
+        theme: {
+            label: 'Theme',
+            light: 'Light',
+            dark: 'Dark',
+            system: 'System'
+        },
+        notifications: 'Notifications',
+    },
+    aircrafts: {
+        title: 'My Aircrafts',
+        addAircraft: 'New Aircraft',
+        description: 'Description / Name',
+        registration: 'Registration (Optional)',
+        model: 'Model (Optional)',
+        category: 'Category',
+        noAircrafts: 'No aircrafts registered yet',
+    }
+}
