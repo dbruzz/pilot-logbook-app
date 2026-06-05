@@ -59,11 +59,21 @@ export interface Database {
                     flight_date: string
                     duration_minutes: number
                     is_instruction: boolean
+                    flight_type: string | null
+                    custom_flight_type: string | null
                     from_location: string | null
                     to_location: string | null
                     notes: string | null
                     created_at: string
                     updated_at: string
+                }
+            }
+            flight_log_goals: {
+                Row: {
+                    id: number
+                    flight_log_id: number
+                    goal_id: number
+                    created_at: string
                 }
             }
             user_aircrafts: {

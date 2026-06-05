@@ -74,7 +74,20 @@ export const es = {
         from: 'Origen',
         to: 'Destino',
         notes: 'Notas',
-        noLogs: 'No hay registros de vuelos'
+        noLogs: 'No hay registros de vuelos',
+        associatedGoals: 'Metas Asociadas',
+        noActiveGoals: 'No hay metas activas',
+        flightType: 'Tipo de Vuelo',
+        flightTypeCustom: 'Especificar tipo de vuelo',
+        flightTypes: {
+            no_type: 'Sin tipo',
+            instruction: 'Vuelo de instrucción',
+            solo: 'Vuelo solo',
+            cross_country: 'Travesía',
+            tow: 'Remolque',
+            training: 'Entrenamiento',
+            other: 'Otro',
+        },
     },
     settings: {
         title: 'Ajustes',
