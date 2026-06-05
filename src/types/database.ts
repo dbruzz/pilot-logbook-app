@@ -44,6 +44,8 @@ export interface Database {
                     end_date: string | null
                     status_id: number
                     is_focus: boolean
+                    goal_type: string | null
+                    custom_goal_type: string | null
                     created_at: string
                     updated_at: string
                     completed_at: string | null

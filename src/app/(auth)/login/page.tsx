@@ -38,7 +38,7 @@ export default function LoginPage() {
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold tracking-tight">{t.auth.login}</CardTitle>
                     <CardDescription>
-                        {t.auth.hasAccount}
+                        {t.auth.loginDescription || 'Enter your email and password to log in'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

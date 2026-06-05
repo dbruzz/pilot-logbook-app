@@ -65,35 +65,42 @@ export default function LogsClient({
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {logs.map(log => (
                     <Card key={log.id} className="group relative overflow-hidden transition-all hover:shadow-md">
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                        <div className="
+                            flex items-center
+                            absolute right-4 top-6
+                            opacity-100
+                            lg:opacity-0
+                            lg:group-hover:opacity-100
+                            transition-opacity
+                        ">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                 onClick={() => setEditingLog(log)}
                                 disabled={loadingId === log.id}
                             >
-                                <Pencil className="w-4 h-4" />
+                                <Pencil className="w-4 h-4 text-muted-foreground" />
                             </Button>
+
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDelete(log.id)}
                                 disabled={loadingId === log.id}
+                                className="hover:text-destructive hover:bg-destructive/10"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                         </div>
 
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between mb-4 pr-6">
-                                <div className="space-y-1">
+                        <CardContent className="pt-10 pb-6 px-6">
+                            <div className="flex items-start justify-between mb-4 pr-12">
+                                <div className="space-y-1 ">
                                     <div className="flex items-center gap-2 text-primary font-medium">
-                                        <Calendar className="w-4 h-4" />
+                                        <Calendar className="pt-12 w-6 h-6 " />
                                         <span>{format(new Date(log.flight_date), 'dd MMM yyyy', { locale: dateLocale })}</span>
                                     </div>
                                     {log.user_aircrafts && (
@@ -103,7 +110,7 @@ export default function LogsClient({
                                         </div>
                                     )}
                                 </div>
-                                <div className="text-right">
+                                <div className="flex flex-col items-end pr-20">
                                     <span className="text-xl font-bold">{formatDuration(log.duration_minutes)}</span>
                                     {log.is_instruction && (
                                         <span className="block text-[10px] uppercase font-bold text-accent-foreground bg-accent px-2 py-0.5 rounded-full mt-1">
@@ -136,9 +143,10 @@ export default function LogsClient({
                     </Card>
                 ))}
                 {logs.length === 0 && (
-                    <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-2xl">
-                        <Clock className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        <p>No flight logs yet.</p>
+                    //<div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-2xl">
+                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
+                        <Clock className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p>{t.logs.noLogs}</p>
                     </div>
                 )}
             </div>

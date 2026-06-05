@@ -22,7 +22,10 @@ export function Sidebar() {
 
             <nav className="flex-1 px-4 space-y-2 mt-4">
                 {INavItems.map((item) => {
-                    const isActive = pathname.startsWith(item.path)
+                    const isActive =
+                        (item.path as string) === '/'
+                            ? pathname === '/'
+                            : pathname.startsWith(item.path)
                     return (
                         <Link
                             key={item.path}

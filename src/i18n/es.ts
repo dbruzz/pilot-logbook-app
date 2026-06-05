@@ -7,6 +7,7 @@ export const es = {
         edit: 'Editar',
         error: 'Ocurrió un error',
         success: 'Éxito',
+        noExtraDetails: 'No hay detalles adicionales',
     },
     auth: {
         login: 'Iniciar Sesión',
@@ -16,9 +17,12 @@ export const es = {
         logout: 'Cerrar Sesión',
         noAccount: '¿No tienes cuenta? Regístrate',
         hasAccount: '¿Ya tienes cuenta? Inicia sesión',
+        checkEmail: '¡Registro exitoso! Por favor revisa tu correo electrónico para verificar tu cuenta.',
+        loginDescription: 'Ingresa tu correo y contraseña para acceder',
+        signupDescription: 'Crea una cuenta nueva para comenzar',
     },
     nav: {
-        dashboard: 'Dashboard',
+        dashboard: 'Inicio',
         goals: 'Metas',
         logs: 'Registros',
         settings: 'Ajustes',
@@ -39,6 +43,20 @@ export const es = {
         hours: 'Horas',
         minutes: 'Minutos',
         setFocus: 'Establecer Principal',
+        noGoals: 'No hay metas registradas',
+        goalType: 'Tipo de Meta',
+        goalTypeCustom: 'Especificar tipo',
+        goalTypes: {
+            no_type: 'Sin tipo',
+            flight_hours: 'Horas de Vuelo',
+            tow_launches: 'Lanzamientos a Remolque',
+            distance: 'Distancia',
+            landings: 'Aterrizajes',
+            number_of_flights: 'Cantidad de Vuelos',
+            solo_flights: 'Vuelos Solo',
+            cross_country: 'Vuelo de Ruta',
+            other: 'Otro',
+        },
         status: {
             active: 'Activa',
             paused: 'Pausada',
@@ -56,6 +74,7 @@ export const es = {
         from: 'Origen',
         to: 'Destino',
         notes: 'Notas',
+        noLogs: 'No hay registros de vuelos'
     },
     settings: {
         title: 'Ajustes',
@@ -77,9 +96,12 @@ export const es = {
         title: 'Mis Aeronaves',
         addAircraft: 'Nueva Aeronave',
         description: 'Descripción / Nombre',
-        registration: 'Matrícula (Opcional)',
-        model: 'Modelo (Opcional)',
+        registrationOptional: 'Matrícula (Opcional)',
+        registration: 'Matrícula',
+        modelOptional: 'Modelo (Opcional)',
+        model: 'Modelo',
         category: 'Categoría',
         noAircrafts: 'No tienes aeronaves registradas',
+        noLogs: 'No hay vuelos registrados'
     }
 }

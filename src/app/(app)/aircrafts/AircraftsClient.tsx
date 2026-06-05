@@ -72,7 +72,7 @@ export default function AircraftsClient({ initialAircrafts, categories }: Aircra
                                     <Input name="description" required placeholder="Cessna 152 / My Plane" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">{t.aircrafts.registration}</label>
+                                    <label className="text-sm font-medium">{t.aircrafts.registrationOptional}</label>
                                     <Input name="registration" placeholder="LV-ABC" />
                                 </div>
                                 <div className="space-y-2">
@@ -99,12 +99,12 @@ export default function AircraftsClient({ initialAircrafts, categories }: Aircra
                                     <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
                                         <Plane className="w-6 h-6" />
                                     </div>
-                                    <div>
-                                        <CardTitle className="text-lg">{aircraft.description}</CardTitle>
+                                    <div className="min-w-0">
+                                        <CardTitle className="text-lg break-all pr-16">{aircraft.description}</CardTitle>
                                         <CardDescription>{aircraft.aircrafts_categories?.description}</CardDescription>
                                     </div>
                                 </div>
-                                <div className="flex items-center absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center absolute right-4 top-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -139,13 +139,13 @@ export default function AircraftsClient({ initialAircrafts, categories }: Aircra
                                     </div>
                                 )}
                                 {!aircraft.registration && !aircraft.model && (
-                                    <div className="text-muted-foreground italic">No extra details</div>
+                                    <div className="flex items-center justify-center h-16 text-muted-foreground italic">{t.common.noExtraDetails}</div>
                                 )}
                             </div>
                         </CardContent>
                     </Card>
                 )) : (
-                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
+                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl ">
                         <Plane className="w-12 h-12 mb-4 opacity-20" />
                         <p>{t.aircrafts.noAircrafts}</p>
                     </div>
@@ -173,7 +173,7 @@ export default function AircraftsClient({ initialAircrafts, categories }: Aircra
                                 <Input name="registration" defaultValue={editingAircraft.registration || ''} placeholder="LV-ABC" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">{t.aircrafts.model}</label>
+                                <label className="text-sm font-medium">{t.aircrafts.modelOptional}</label>
                                 <Input name="model" defaultValue={editingAircraft.model || ''} placeholder="C152" />
                             </div>
                             <div className="space-y-2">

@@ -13,6 +13,11 @@ export async function createGoal(formData: FormData) {
     const target_minutes = parseInt(formData.get('target_minutes') as string, 10)
     const start_date = formData.get('start_date') as string || null
     const end_date = formData.get('end_date') as string || null
+    const rawGoalType = formData.get('goal_type') as string || ''
+    const goal_type = rawGoalType === '' || rawGoalType === 'no_type' ? null : rawGoalType
+    const custom_goal_type = rawGoalType === 'other'
+        ? (formData.get('custom_goal_type') as string || null)
+        : null
 
     const { error } = await supabase.from('goals').insert({
         user_id: user.id,
@@ -21,6 +26,8 @@ export async function createGoal(formData: FormData) {
         target_minutes,
         start_date,
         end_date,
+        goal_type,
+        custom_goal_type,
         status_id: 1, // active
         is_focus: false,
     })
@@ -42,6 +49,11 @@ export async function updateGoal(id: number, formData: FormData) {
     const start_date = formData.get('start_date') as string || null
     const end_date = formData.get('end_date') as string || null
     const status_id = parseInt(formData.get('status_id') as string, 10)
+    const rawGoalType = formData.get('goal_type') as string || ''
+    const goal_type = rawGoalType === '' || rawGoalType === 'no_type' ? null : rawGoalType
+    const custom_goal_type = rawGoalType === 'other'
+        ? (formData.get('custom_goal_type') as string || null)
+        : null
 
     const { error } = await supabase
         .from('goals')
@@ -52,6 +64,8 @@ export async function updateGoal(id: number, formData: FormData) {
             start_date,
             end_date,
             status_id,
+            goal_type,
+            custom_goal_type,
             updated_at: new Date().toISOString()
         })
         .eq('id', id)

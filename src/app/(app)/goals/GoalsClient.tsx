@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Goal, Plus, Pencil, Trash2, Star } from 'lucide-react'
@@ -16,9 +17,11 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingGoal, setEditingGoal] = useState<any | null>(null)
     const [loadingId, setLoadingId] = useState<number | null>(null)
+    const [selectedGoalType, setSelectedGoalType] = useState<string>('no_type')
 
     const handleOpenModal = (goal: any = null) => {
         setEditingGoal(goal)
+        setSelectedGoalType(goal?.goal_type ?? 'no_type')
         setIsModalOpen(true)
     }
 
@@ -79,6 +82,14 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
                                     {goal.title}
                                 </CardTitle>
                                 {goal.description && <p className="text-sm text-muted-foreground">{goal.description}</p>}
+                                {goal.goal_type && goal.goal_type !== 'no_type' && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {goal.goal_type === 'other'
+                                            ? (goal.custom_goal_type || t.goals.goalTypes.other)
+                                            : (t.goals.goalTypes[goal.goal_type as keyof typeof t.goals.goalTypes] ?? goal.goal_type)
+                                        }
+                                    </span>
+                                )}
                             </div>
                             <div className="flex shrink-0 gap-1">
                                 {!goal.is_focus && goal.status_id === 1 && (
@@ -131,6 +142,12 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
                         </CardContent>
                     </Card>
                 ))}
+                {goals.length === 0 && (
+                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
+                        <Goal className="w-12 h-12 mb-4 opacity-20" />
+                        <p>{t.goals.noGoals}</p>
+                    </div>
+                )}
             </div>
 
             <Modal
@@ -147,6 +164,35 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
                         <label className="text-sm font-medium">Description</label>
                         <Input name="description" defaultValue={editingGoal?.description || ''} />
                     </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t.goals.goalType}</label>
+                        <Select
+                            name="goal_type"
+                            value={selectedGoalType}
+                            onChange={e => setSelectedGoalType(e.target.value)}
+                            options={[
+                                { value: 'no_type', label: t.goals.goalTypes.no_type },
+                                { value: 'flight_hours', label: t.goals.goalTypes.flight_hours },
+                                { value: 'tow_launches', label: t.goals.goalTypes.tow_launches },
+                                { value: 'distance', label: t.goals.goalTypes.distance },
+                                { value: 'landings', label: t.goals.goalTypes.landings },
+                                { value: 'number_of_flights', label: t.goals.goalTypes.number_of_flights },
+                                { value: 'solo_flights', label: t.goals.goalTypes.solo_flights },
+                                { value: 'cross_country', label: t.goals.goalTypes.cross_country },
+                                { value: 'other', label: t.goals.goalTypes.other },
+                            ]}
+                        />
+                    </div>
+                    {selectedGoalType === 'other' && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">{t.goals.goalTypeCustom}</label>
+                            <Input
+                                name="custom_goal_type"
+                                defaultValue={editingGoal?.custom_goal_type || ''}
+                                placeholder={t.goals.goalTypeCustom}
+                            />
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">{t.goals.targetMinutes}</label>
                         <Input type="number" name="target_minutes" required defaultValue={editingGoal?.target_minutes} min="1" />

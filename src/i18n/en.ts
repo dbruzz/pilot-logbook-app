@@ -7,6 +7,7 @@ export const en = {
         edit: 'Edit',
         error: 'An error occurred',
         success: 'Success',
+        noExtraDetails: 'No extra details',
     },
     auth: {
         login: 'Log In',
@@ -16,6 +17,9 @@ export const en = {
         logout: 'Log Out',
         noAccount: "Don't have an account? Sign up",
         hasAccount: 'Already have an account? Log in',
+        checkEmail: 'Registration successful! Please check your email to verify your account.',
+        loginDescription: 'Enter your email and password to log in',
+        signupDescription: 'Create a new account to get started',
     },
     nav: {
         dashboard: 'Dashboard',
@@ -39,6 +43,7 @@ export const en = {
         hours: 'Hours',
         minutes: 'Minutes',
         setFocus: 'Set as Focus',
+        noGoals: 'No goals registered yet',
         status: {
             active: 'Active',
             paused: 'Paused',
@@ -56,6 +61,7 @@ export const en = {
         from: 'From',
         to: 'To',
         notes: 'Notes',
+        noLogs: 'No flight logs registered yet'
     },
     settings: {
         title: 'Settings',
@@ -77,8 +83,10 @@ export const en = {
         title: 'My Aircrafts',
         addAircraft: 'New Aircraft',
         description: 'Description / Name',
-        registration: 'Registration (Optional)',
-        model: 'Model (Optional)',
+        registrationOptional: 'Registration (Optional)',
+        registration: 'Registration',
+        modelOptional: 'Model (Optional)',
+        model: 'Model',
         category: 'Category',
         noAircrafts: 'No aircrafts registered yet',
     }

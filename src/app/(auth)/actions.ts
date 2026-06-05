@@ -26,13 +26,17 @@ export async function signup(formData: FormData) {
     const supabase = await createClient()
 
     // Profiles table will be created automatically via Postgres trigger on auth.users registration
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email,
         password,
     })
 
     if (error) {
         return { error: error.message }
+    }
+
+    if (data.user && data.session === null) {
+        return { needsEmailConfirmation: true }
     }
 
     redirect('/dashboard')
