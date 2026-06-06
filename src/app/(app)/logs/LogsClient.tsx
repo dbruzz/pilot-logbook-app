@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
-import { Plus, Trash2, Pencil, Calendar, Plane as PlaneIcon, MapPin, Clock } from 'lucide-react'
+import { Plus, Trash2, Pencil, Calendar, Plane as PlaneIcon, MapPin, Clock, Ruler } from 'lucide-react'
 import { createLog, deleteLog, updateLog } from './actions'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
@@ -159,6 +159,13 @@ export default function LogsClient({
                                 </div>
                             )}
 
+                            {log.distance_value && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                    <Ruler className="w-4 h-4 shrink-0" />
+                                    <span>{log.distance_value} {log.distance_unit?.toUpperCase()}</span>
+                                </div>
+                            )}
+
                             {log.notes && (
                                 <p className="text-sm text-muted-foreground line-clamp-2 italic">
                                     "{log.notes}"
@@ -216,6 +223,27 @@ export default function LogsClient({
                     <div className="space-y-2">
                         <label className="text-sm font-medium">{t.logs.notes}</label>
                         <Input name="notes" placeholder="Remarks..." />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t.logs.distance}</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Input
+                                type="number"
+                                name="distance_value"
+                                min={0}
+                                step="any"
+                                placeholder="0"
+                            />
+                            <Select
+                                name="distance_unit"
+                                options={[
+                                    { value: 'km', label: t.logs.distanceUnits.km },
+                                    { value: 'nm', label: t.logs.distanceUnits.nm },
+                                    { value: 'mi', label: t.logs.distanceUnits.mi },
+                                ]}
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -321,6 +349,29 @@ export default function LogsClient({
                         <div className="space-y-2">
                             <label className="text-sm font-medium">{t.logs.notes}</label>
                             <Input name="notes" placeholder="Remarks..." defaultValue={editingLog.notes || ''} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">{t.logs.distance}</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Input
+                                    type="number"
+                                    name="distance_value"
+                                    min={0}
+                                    step="any"
+                                    placeholder="0"
+                                    defaultValue={editingLog.distance_value ?? ''}
+                                />
+                                <Select
+                                    name="distance_unit"
+                                    defaultValue={editingLog.distance_unit || 'km'}
+                                    options={[
+                                        { value: 'km', label: t.logs.distanceUnits.km },
+                                        { value: 'nm', label: t.logs.distanceUnits.nm },
+                                        { value: 'mi', label: t.logs.distanceUnits.mi },
+                                    ]}
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">

@@ -61,6 +61,8 @@ export interface Database {
                     is_instruction: boolean
                     flight_type: string | null
                     custom_flight_type: string | null
+                    distance_value: number | null
+                    distance_unit: string | null
                     from_location: string | null
                     to_location: string | null
                     notes: string | null

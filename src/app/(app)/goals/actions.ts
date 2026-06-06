@@ -94,26 +94,45 @@ export async function deleteGoal(id: number) {
     return { success: true }
 }
 
-export async function setFocusGoal(id: number) {
+export async function toggleFocusGoal(id: number) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
-    // First, unset all focus goals for this user
-    await supabase
+    // Check if this goal is already the focus
+    const { data: goal } = await supabase
         .from('goals')
-        .update({ is_focus: false, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('is_focus', true)
-
-    // Then set the new focus goal
-    const { error } = await supabase
-        .from('goals')
-        .update({ is_focus: true, updated_at: new Date().toISOString() })
+        .select('is_focus')
         .eq('id', id)
         .eq('user_id', user.id)
+        .single()
 
-    if (error) return { error: error.message }
+    if (!goal) return { error: 'Goal not found' }
+
+    if (goal.is_focus) {
+        // Already primary → unmark it (no primary goal)
+        const { error } = await supabase
+            .from('goals')
+            .update({ is_focus: false, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .eq('user_id', user.id)
+        if (error) return { error: error.message }
+    } else {
+        // Not primary → clear any existing primary, then set this one
+        await supabase
+            .from('goals')
+            .update({ is_focus: false, updated_at: new Date().toISOString() })
+            .eq('user_id', user.id)
+            .eq('is_focus', true)
+
+        const { error } = await supabase
+            .from('goals')
+            .update({ is_focus: true, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .eq('user_id', user.id)
+        if (error) return { error: error.message }
+    }
+
     revalidatePath('/goals')
     revalidatePath('/dashboard')
     return { success: true }

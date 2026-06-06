@@ -32,6 +32,14 @@ export async function createLog(formData: FormData) {
     // Keep is_instruction in sync for legacy display
     const is_instruction = flight_type === 'instruction'
 
+    const rawDistance = formData.get('distance_value') as string || ''
+    const distance_value = rawDistance !== '' && parseFloat(rawDistance) > 0
+        ? parseFloat(rawDistance)
+        : null
+    const distance_unit = distance_value !== null
+        ? (formData.get('distance_unit') as string || 'km')
+        : null
+
     const duration_minutes = timeToMinutes(durationStr)
 
     if (duration_minutes <= 0) return { error: 'Duration must be greater than 0' }
@@ -43,6 +51,8 @@ export async function createLog(formData: FormData) {
         is_instruction,
         flight_type,
         custom_flight_type,
+        distance_value,
+        distance_unit,
         aircraft_id,
         from_location,
         to_location,
@@ -105,6 +115,14 @@ export async function updateLog(id: number, formData: FormData) {
     // Keep is_instruction in sync for legacy display
     const is_instruction = flight_type === 'instruction'
 
+    const rawDistance = formData.get('distance_value') as string || ''
+    const distance_value = rawDistance !== '' && parseFloat(rawDistance) > 0
+        ? parseFloat(rawDistance)
+        : null
+    const distance_unit = distance_value !== null
+        ? (formData.get('distance_unit') as string || 'km')
+        : null
+
     const duration_minutes = timeToMinutes(durationStr)
 
     if (duration_minutes <= 0) return { error: 'Duration must be greater than 0' }
@@ -117,6 +135,8 @@ export async function updateLog(id: number, formData: FormData) {
             is_instruction,
             flight_type,
             custom_flight_type,
+            distance_value,
+            distance_unit,
             aircraft_id,
             from_location,
             to_location,

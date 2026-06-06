@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '@/hooks/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { Goal, Plus, Pencil, Trash2, Star } from 'lucide-react'
-import { createGoal, updateGoal, deleteGoal, setFocusGoal } from './actions'
+import { Goal, Plus, Pencil, Trash2, Star, Info } from 'lucide-react'
+import { createGoal, updateGoal, deleteGoal, toggleFocusGoal } from './actions'
 
 export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
     const { t } = useTranslation()
@@ -18,10 +18,36 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
     const [editingGoal, setEditingGoal] = useState<any | null>(null)
     const [loadingId, setLoadingId] = useState<number | null>(null)
     const [selectedGoalType, setSelectedGoalType] = useState<string>('no_type')
+    const [isHelpOpen, setIsHelpOpen] = useState(false)
+    const [targetDays, setTargetDays] = useState(0)
+    const [targetHours, setTargetHours] = useState(1)
+    const [targetMins, setTargetMins] = useState(0)
+    const helpRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!isHelpOpen) return
+        const handleClickOutside = (e: MouseEvent) => {
+            if (helpRef.current && !helpRef.current.contains(e.target as Node)) {
+                setIsHelpOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [isHelpOpen])
 
     const handleOpenModal = (goal: any = null) => {
         setEditingGoal(goal)
         setSelectedGoalType(goal?.goal_type ?? 'no_type')
+        if (goal?.target_minutes) {
+            const total = goal.target_minutes as number
+            setTargetDays(Math.floor(total / 1440))
+            setTargetHours(Math.floor((total % 1440) / 60))
+            setTargetMins(total % 60)
+        } else {
+            setTargetDays(0)
+            setTargetHours(1)
+            setTargetMins(0)
+        }
         setIsModalOpen(true)
     }
 
@@ -31,13 +57,18 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
     }
 
     const onSubmit = async (formData: FormData) => {
+        const totalMinutes = targetDays * 1440 + targetHours * 60 + targetMins
+        if (totalMinutes <= 0) {
+            alert(t.goals.targetTimeRequired)
+            return
+        }
+        formData.set('target_minutes', String(totalMinutes))
         if (editingGoal) {
-            formData.append('status_id', '1') // Keep active for simplicity in MVP
+            formData.append('status_id', '1')
             await updateGoal(editingGoal.id, formData)
         } else {
             await createGoal(formData)
         }
-        // Simple optimistic reload by refetching window or letting server action replace router
         window.location.reload()
     }
 
@@ -48,9 +79,9 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
         window.location.reload()
     }
 
-    const handleSetFocus = async (id: number) => {
+    const handleToggleFocus = async (id: number) => {
         setLoadingId(id)
-        await setFocusGoal(id)
+        await toggleFocusGoal(id)
         window.location.reload()
     }
 
@@ -63,8 +94,31 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <div>
+                <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-bold tracking-tight">{t.goals.title}</h1>
+                    <div ref={helpRef} className="relative">
+                        <button
+                            type="button"
+                            aria-label={t.goals.helpLabel}
+                            title={t.goals.helpLabel}
+                            onClick={() => setIsHelpOpen(o => !o)}
+                            className="flex items-center justify-center w-6 h-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        >
+                            <Info className="w-4 h-4" />
+                        </button>
+                        {isHelpOpen && (
+                            <div className="absolute left-0 top-8 z-50 w-72 sm:w-80 rounded-xl border border-border bg-card shadow-lg p-4 space-y-3">
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <Star className="w-4 h-4 shrink-0 mt-0.5 text-primary fill-primary" />
+                                    <span>{t.goals.help.star}</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <Goal className="w-4 h-4 shrink-0 mt-0.5" />
+                                    <span>{t.goals.help.primary}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <Button onClick={() => handleOpenModal()} className="gap-2">
                     <Plus className="w-4 h-4" />
@@ -92,15 +146,18 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
                                 )}
                             </div>
                             <div className="flex shrink-0 gap-1">
-                                {!goal.is_focus && goal.status_id === 1 && (
+                                {goal.status_id === 1 && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        title={t.goals.setFocus}
-                                        onClick={() => handleSetFocus(goal.id)}
+                                        title={goal.is_focus ? t.goals.unsetFocus : t.goals.setFocus}
+                                        onClick={() => handleToggleFocus(goal.id)}
                                         disabled={loadingId === goal.id}
                                     >
-                                        <Goal className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                                        {goal.is_focus
+                                            ? <Star className="w-4 h-4 text-primary fill-primary" />
+                                            : <Goal className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                                        }
                                     </Button>
                                 )}
                                 <Button
@@ -194,8 +251,38 @@ export default function GoalsClient({ initialGoals }: { initialGoals: any[] }) {
                         </div>
                     )}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">{t.goals.targetMinutes}</label>
-                        <Input type="number" name="target_minutes" required defaultValue={editingGoal?.target_minutes} min="1" />
+                        <label className="text-sm font-medium">{t.goals.targetTime}</label>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">{t.goals.days}</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    value={targetDays}
+                                    onChange={e => setTargetDays(Math.max(0, parseInt(e.target.value) || 0))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">{t.goals.hours}</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={23}
+                                    value={targetHours}
+                                    onChange={e => setTargetHours(Math.min(23, Math.max(0, parseInt(e.target.value) || 0)))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">{t.goals.minutes}</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={59}
+                                    value={targetMins}
+                                    onChange={e => setTargetMins(Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">

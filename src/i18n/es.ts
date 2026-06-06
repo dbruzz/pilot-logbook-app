@@ -40,10 +40,19 @@ export const es = {
         title: 'Metas',
         addGoal: 'Nueva Meta',
         targetMinutes: 'Tiempo Objetivo',
+        targetTime: 'Tiempo Objetivo',
+        days: 'Días',
         hours: 'Horas',
         minutes: 'Minutos',
+        targetTimeRequired: 'El tiempo objetivo debe ser mayor que cero.',
         setFocus: 'Establecer Principal',
+        unsetFocus: 'Quitar Principal',
         noGoals: 'No hay metas registradas',
+        help: {
+            star: 'Estrella: Indica que la meta está marcada como meta principal.',
+            primary: 'Meta principal: Utiliza este icono para marcar o desmarcar una meta como principal. Solo una meta puede ser principal al mismo tiempo.',
+        },
+        helpLabel: 'Explicación de los iconos',
         goalType: 'Tipo de Meta',
         goalTypeCustom: 'Especificar tipo',
         goalTypes: {
@@ -87,6 +96,13 @@ export const es = {
             tow: 'Remolque',
             training: 'Entrenamiento',
             other: 'Otro',
+        },
+        distance: 'Distancia (Opcional)',
+        distanceUnit: 'Unidad',
+        distanceUnits: {
+            km: 'Kilómetros (km)',
+            nm: 'Millas náuticas (NM)',
+            mi: 'Millas (mi)',
         },
     },
     settings: {
