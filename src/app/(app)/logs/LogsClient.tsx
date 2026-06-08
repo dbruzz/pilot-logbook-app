@@ -81,69 +81,68 @@ export default function LogsClient({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {logs.map(log => (
-                    <Card key={log.id} className="group relative overflow-hidden transition-all hover:shadow-md">
-                        <div className="
-                            flex items-center
-                            absolute right-4 top-6
-                            opacity-100
-                            lg:opacity-0
-                            lg:group-hover:opacity-100
-                            transition-opacity
-                        ">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                    const ft = log.flight_type ?? (log.is_instruction ? 'instruction' : 'no_type')
-                                    setEditFlightType(ft)
-                                    setEditingLog(log)
-                                }}
-                                disabled={loadingId === log.id}
-                            >
-                                <Pencil className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(log.id)}
-                                disabled={loadingId === log.id}
-                                className="hover:text-destructive hover:bg-destructive/10"
-                            >
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                        </div>
-
-                        <CardContent className="pt-10 pb-6 px-6">
-                            <div className="flex items-start justify-between mb-4 pr-12">
-                                <div className="space-y-1 ">
-                                    <div className="flex items-center gap-2 text-primary font-medium">
-                                        <Calendar className="pt-12 w-6 h-6 " />
-                                        <span>{format(new Date(log.flight_date), 'dd MMM yyyy', { locale: dateLocale })}</span>
-                                    </div>
-                                    {log.user_aircrafts && (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <PlaneIcon className="w-4 h-4" />
-                                            <span>{log.user_aircrafts.registration || log.user_aircrafts.description}</span>
-                                        </div>
-                                    )}
+                    <Card key={log.id} className="group transition-all hover:shadow-md">
+                        <CardContent className="py-6 px-6">
+                            {/* Row 1: Date + Action icons */}
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 text-primary font-medium">
+                                    <Calendar className="w-4 h-4 shrink-0" />
+                                    <span>{format(new Date(log.flight_date), 'dd MMM yyyy', { locale: dateLocale })}</span>
                                 </div>
-                                <div className="flex flex-col items-end pr-20">
-                                    <span className="text-xl font-bold">{formatDuration(log.duration_minutes)}</span>
-                                    {(log.flight_type && log.flight_type !== 'no_type') ? (
-                                        <span className="block text-[10px] uppercase font-bold text-accent-foreground bg-accent px-2 py-0.5 rounded-full mt-1">
-                                            {log.flight_type === 'other'
-                                                ? (log.custom_flight_type || t.logs.flightTypes.other)
-                                                : (t.logs.flightTypes[log.flight_type as keyof typeof t.logs.flightTypes] ?? log.flight_type)
-                                            }
-                                        </span>
-                                    ) : log.is_instruction ? (
-                                        <span className="block text-[10px] uppercase font-bold text-accent-foreground bg-accent px-2 py-0.5 rounded-full mt-1">
-                                            {t.logs.flightTypes.instruction}
-                                        </span>
-                                    ) : null}
+                                <div className="flex items-center gap-0.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                            const ft = log.flight_type ?? (log.is_instruction ? 'instruction' : 'no_type')
+                                            setEditFlightType(ft)
+                                            setEditingLog(log)
+                                        }}
+                                        disabled={loadingId === log.id}
+                                    >
+                                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDelete(log.id)}
+                                        disabled={loadingId === log.id}
+                                        className="hover:text-destructive hover:bg-destructive/10"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
                                 </div>
                             </div>
+
+                            {/* Row 2: Aircraft + Duration */}
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    {log.user_aircrafts ? (
+                                        <>
+                                            <PlaneIcon className="w-4 h-4 shrink-0" />
+                                            <span>{log.user_aircrafts.registration || log.user_aircrafts.description}</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-muted-foreground/40">—</span>
+                                    )}
+                                </div>
+                                <span className="text-xl font-bold">{formatDuration(log.duration_minutes)}</span>
+                            </div>
+
+                            {/* Row 3: Flight type badge */}
+                            {((log.flight_type && log.flight_type !== 'no_type') || log.is_instruction) && (
+                                <div className="mb-3">
+                                    <span className="inline-block text-[10px] uppercase font-bold text-accent-foreground bg-accent px-2 py-0.5 rounded-full">
+                                        {log.flight_type === 'other'
+                                            ? (log.custom_flight_type || t.logs.flightTypes.other)
+                                            : log.flight_type && log.flight_type !== 'no_type'
+                                                ? (t.logs.flightTypes[log.flight_type as keyof typeof t.logs.flightTypes] ?? log.flight_type)
+                                                : t.logs.flightTypes.instruction
+                                        }
+                                    </span>
+                                </div>
+                            )}
+
 
                             {(log.from_location || log.to_location) && (
                                 <div className="flex items-center justify-between text-sm bg-secondary/50 p-2.5 rounded-lg mb-3">
