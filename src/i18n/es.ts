@@ -30,6 +30,9 @@ export const es = {
     },
     dashboard: {
         totalHours: 'Horas Totales',
+        total: 'Total',
+        byAircraft: 'Por Aeronave',
+        unknownAircraft: 'Aeronave desconocida',
         focusGoal: 'Meta Principal',
         activeGoals: 'Metas Activas',
         recentFlights: 'Vuelos Recientes',

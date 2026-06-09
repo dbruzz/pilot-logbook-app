@@ -1,15 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from '@/hooks/use-translation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Plane, Goal, Clock, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
 
+interface AircraftHours {
+    label: string
+    minutes: number
+}
+
 interface DashboardClientProps {
     totalHours: number
     totalMinutes: number
+    flightsByAircraft: AircraftHours[]
     focusGoal: any | null
     activeGoals: any[]
     recentFlights: any[]
@@ -18,12 +25,15 @@ interface DashboardClientProps {
 export default function DashboardClient({
     totalHours,
     totalMinutes,
+    flightsByAircraft = [],
     focusGoal,
     activeGoals,
     recentFlights,
 }: DashboardClientProps) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
+
+    const [hoursView, setHoursView] = useState<'total' | 'byAircraft'>('total')
 
     const formatDuration = (minutes: number) => {
         const h = Math.floor(minutes / 60)
@@ -36,13 +46,78 @@ export default function DashboardClient({
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{t.nav.dashboard}</h1>
-                    <p className="text-muted-foreground mt-1">
-                        {t.dashboard.totalHours}: <span className="font-semibold text-foreground">{totalHours}h {totalMinutes}m</span>
-                    </p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+                {/* Flight Hours Card */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-muted-foreground" />
+                                <CardTitle className="text-lg">{t.dashboard.totalHours}</CardTitle>
+                            </div>
+                            {/* Segmented control */}
+                            <div className="flex items-center bg-secondary rounded-lg p-1 gap-1">
+                                <button
+                                    onClick={() => setHoursView('total')}
+                                    className={[
+                                        'text-sm font-medium px-3 py-1 rounded-md transition-all',
+                                        hoursView === 'total'
+                                            ? 'bg-background shadow text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    ].join(' ')}
+                                >
+                                    {t.dashboard.total}
+                                </button>
+                                <button
+                                    onClick={() => setHoursView('byAircraft')}
+                                    className={[
+                                        'text-sm font-medium px-3 py-1 rounded-md transition-all',
+                                        hoursView === 'byAircraft'
+                                            ? 'bg-background shadow text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    ].join(' ')}
+                                >
+                                    {t.dashboard.byAircraft}
+                                </button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {hoursView === 'total' ? (
+                            <p className="text-4xl font-bold tracking-tight">
+                                {totalHours}h <span className="text-2xl font-semibold text-muted-foreground">{totalMinutes}m</span>
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {flightsByAircraft.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
+                                        <Plane className="w-10 h-10 mb-3 opacity-20" />
+                                        <p className="text-sm">{t.dashboard.noFlights}</p>
+                                    </div>
+                                ) : (
+                                    flightsByAircraft.map((aircraft, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Plane className="w-4 h-4 text-muted-foreground shrink-0" />
+                                                <span className="text-sm font-medium">{aircraft.label}</span>
+                                            </div>
+                                            <span className="text-sm font-bold tabular-nums">
+                                                {formatDuration(aircraft.minutes)}
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 {/* Focus Goal Card */}
                 <Card className="border-primary/20 bg-primary/5 shadow-md shadow-primary/5">
                     <CardHeader className="pb-2">
