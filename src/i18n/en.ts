@@ -39,6 +39,14 @@ export const en = {
         recentFlights: 'Recent Flights',
         noFlights: 'No recent flights',
         noFocusGoal: 'No focus goal set',
+        filter: {
+            allTime: 'All time',
+            thisYear: 'This year',
+            thisMonth: 'This month',
+            custom: 'Custom',
+            from: 'From',
+            to: 'To',
+        },
     },
     goals: {
         title: 'Goals',

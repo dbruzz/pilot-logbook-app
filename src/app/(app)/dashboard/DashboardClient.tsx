@@ -1,31 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from '@/hooks/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Plane, Goal, Clock, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
 
-interface AircraftHours {
-    label: string
-    minutes: number
+// ─── types ────────────────────────────────────────────────────────
+
+type DateFilter = 'allTime' | 'thisYear' | 'thisMonth' | 'custom'
+
+interface HoursLog {
+    flight_date: string
+    duration_minutes: number
+    aircraft_id: number | null
+    user_aircrafts: { registration: string | null; description: string } | { registration: string | null; description: string }[] | null
 }
 
 interface DashboardClientProps {
-    totalHours: number
-    totalMinutes: number
-    flightsByAircraft: AircraftHours[]
+    hoursLogs: HoursLog[]
     focusGoal: any | null
     activeGoals: any[]
     recentFlights: any[]
 }
 
+// ─── helpers ──────────────────────────────────────────────────────
+
+function formatDuration(minutes: number) {
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    return `${h}h ${m}m`
+}
+
+function todayISO() {
+    return new Date().toISOString().split('T')[0]
+}
+
+function thisYearStart() {
+    return `${new Date().getFullYear()}-01-01`
+}
+
+function thisMonthStart() {
+    const d = new Date()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${d.getFullYear()}-${mm}-01`
+}
+
+// ─── component ────────────────────────────────────────────────────
+
 export default function DashboardClient({
-    totalHours,
-    totalMinutes,
-    flightsByAircraft = [],
+    hoursLogs,
     focusGoal,
     activeGoals,
     recentFlights,
@@ -33,13 +60,76 @@ export default function DashboardClient({
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
 
+    // ── hours view state ──────────────────────────────────────────
     const [hoursView, setHoursView] = useState<'total' | 'byAircraft'>('total')
 
-    const formatDuration = (minutes: number) => {
-        const h = Math.floor(minutes / 60)
-        const m = minutes % 60
-        return `${h}h ${m}m`
-    }
+    // ── date filter state ─────────────────────────────────────────
+    const [dateFilter, setDateFilter] = useState<DateFilter>('allTime')
+    const [customFrom, setCustomFrom] = useState('')
+    const [customTo, setCustomTo] = useState(todayISO())
+
+    // ── derived filtered logs ─────────────────────────────────────
+    const filteredLogs = useMemo(() => {
+        if (dateFilter === 'allTime') return hoursLogs
+
+        let from: string | null = null
+        let to: string | null = todayISO()
+
+        if (dateFilter === 'thisYear') {
+            from = thisYearStart()
+        } else if (dateFilter === 'thisMonth') {
+            from = thisMonthStart()
+        } else if (dateFilter === 'custom') {
+            from = customFrom || null
+            to = customTo || todayISO()
+        }
+
+        return hoursLogs.filter(log => {
+            if (from && log.flight_date < from) return false
+            if (to && log.flight_date > to) return false
+            return true
+        })
+    }, [hoursLogs, dateFilter, customFrom, customTo])
+
+    // ── derived totals ────────────────────────────────────────────
+    const { totalHours, totalRemaining, flightsByAircraft } = useMemo(() => {
+        const totalMins = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0)
+
+        const aircraftMap = new Map<number, { label: string; minutes: number }>()
+        for (const log of filteredLogs) {
+            const id = log.aircraft_id
+            if (!id) continue
+            const raw = log.user_aircrafts
+            const ac = Array.isArray(raw) ? raw[0] : raw
+            const label = ac
+                ? [ac.registration, ac.description].filter(Boolean).join(' ')
+                : String(id)
+            const ex = aircraftMap.get(id)
+            if (ex) {
+                ex.minutes += log.duration_minutes || 0
+            } else {
+                aircraftMap.set(id, { label, minutes: log.duration_minutes || 0 })
+            }
+        }
+        const byAircraft = Array.from(aircraftMap.values())
+            .filter(a => a.minutes > 0)
+            .sort((a, b) => b.minutes - a.minutes)
+
+        return {
+            totalHours: Math.floor(totalMins / 60),
+            totalRemaining: totalMins % 60,
+            flightsByAircraft: byAircraft,
+        }
+    }, [filteredLogs])
+
+    // ─── render ───────────────────────────────────────────────────
+
+    const filterOptions: { value: DateFilter; label: string }[] = [
+        { value: 'allTime', label: t.dashboard.filter.allTime },
+        { value: 'thisYear', label: t.dashboard.filter.thisYear },
+        { value: 'thisMonth', label: t.dashboard.filter.thisMonth },
+        { value: 'custom', label: t.dashboard.filter.custom },
+    ]
 
     return (
         <div className="space-y-6">
@@ -50,9 +140,10 @@ export default function DashboardClient({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
-                {/* Flight Hours Card */}
+                {/* ── Flight Hours Card ────────────────────────── */}
                 <Card>
                     <CardHeader className="pb-3">
+                        {/* Row 1: title + segmented control */}
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-muted-foreground" />
@@ -84,11 +175,59 @@ export default function DashboardClient({
                                 </button>
                             </div>
                         </div>
+
+                        {/* Row 2: date filter pills */}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {filterOptions.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => setDateFilter(opt.value)}
+                                    className={[
+                                        'text-xs font-medium px-3 py-1 rounded-full border transition-all',
+                                        dateFilter === opt.value
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/40',
+                                    ].join(' ')}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Row 3: custom range inputs (only when "Custom" is active) */}
+                        {dateFilter === 'custom' && (
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <label className="text-xs text-muted-foreground shrink-0">
+                                        {t.dashboard.filter.from}
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        value={customFrom}
+                                        onChange={e => setCustomFrom(e.target.value)}
+                                        className="h-8 text-xs w-36"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <label className="text-xs text-muted-foreground shrink-0">
+                                        {t.dashboard.filter.to}
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        value={customTo}
+                                        onChange={e => setCustomTo(e.target.value)}
+                                        className="h-8 text-xs w-36"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </CardHeader>
+
                     <CardContent>
                         {hoursView === 'total' ? (
                             <p className="text-4xl font-bold tracking-tight">
-                                {totalHours}h <span className="text-2xl font-semibold text-muted-foreground">{totalMinutes}m</span>
+                                {totalHours}h{' '}
+                                <span className="text-2xl font-semibold text-muted-foreground">{totalRemaining}m</span>
                             </p>
                         ) : (
                             <div className="space-y-2">
@@ -118,7 +257,7 @@ export default function DashboardClient({
                     </CardContent>
                 </Card>
 
-                {/* Focus Goal Card */}
+                {/* ── Focus Goal Card ──────────────────────────── */}
                 <Card className="border-primary/20 bg-primary/5 shadow-md shadow-primary/5">
                     <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
@@ -163,7 +302,7 @@ export default function DashboardClient({
                     </CardContent>
                 </Card>
 
-                {/* Recent Flights Card */}
+                {/* ── Recent Flights Card ──────────────────────── */}
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-2">

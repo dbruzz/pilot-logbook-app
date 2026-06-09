@@ -11,7 +11,7 @@ export default async function DashboardPage() {
     // Fetch Total Hours (also join aircraft for the "By Aircraft" breakdown)
     const { data: totalHoursData } = await supabase
         .from('flight_logs')
-        .select('duration_minutes, aircraft_id, user_aircrafts(registration, description)')
+        .select('flight_date, duration_minutes, aircraft_id, user_aircrafts(registration, description)')
         .eq('user_id', user.id)
 
     const totalMinutes = totalHoursData?.reduce((sum, log) => sum + (log.duration_minutes || 0), 0) || 0
@@ -97,9 +97,7 @@ export default async function DashboardPage() {
 
     return (
         <DashboardClient
-            totalHours={totalHours}
-            totalMinutes={remainingMinutes}
-            flightsByAircraft={flightsByAircraft}
+            hoursLogs={totalHoursData || []}
             focusGoal={focusGoalWithProgress}
             activeGoals={activeGoalsWithProgress}
             recentFlights={recentFlights || []}

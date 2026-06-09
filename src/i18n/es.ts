@@ -39,6 +39,14 @@ export const es = {
         recentFlights: 'Vuelos Recientes',
         noFlights: 'No hay vuelos recientes',
         noFocusGoal: 'No hay meta principal establecida',
+        filter: {
+            allTime: 'Todo el tiempo',
+            thisYear: 'Este año',
+            thisMonth: 'Este mes',
+            custom: 'Personalizado',
+            from: 'Desde',
+            to: 'Hasta',
+        },
     },
     goals: {
         title: 'Metas',
