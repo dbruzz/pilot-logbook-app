@@ -25,6 +25,7 @@ export const es = {
         dashboard: 'Inicio',
         goals: 'Metas',
         logs: 'Registros',
+        journal: 'Diario',
         settings: 'Ajustes',
         aircrafts: 'Aeronaves',
     },
@@ -135,5 +136,29 @@ export const es = {
         category: 'Categoría',
         noAircrafts: 'No tienes aeronaves registradas',
         noLogs: 'No hay vuelos registrados'
-    }
+    },
+    journal: {
+        title: 'Diario de Vuelo',
+        addEntry: 'Nueva Entrada',
+        noEntries: 'No hay entradas en el diario. Escribe tu primera entrada.',
+        imageCount: 'imágenes',
+        maxImages: 'Máximo de 3 imágenes alcanzado',
+        addImage: 'Agregar imagen',
+        noRelation: '— Ninguno —',
+        entryTypes: {
+            note: 'Nota',
+            experience: 'Experiencia',
+            achievement: 'Logro',
+        },
+        fields: {
+            title: 'Título',
+            content: 'Contenido',
+            date: 'Fecha',
+            entryType: 'Tipo de Entrada',
+            relatedFlight: 'Vuelo Relacionado',
+            relatedGoal: 'Meta Relacionada',
+            relatedAircraft: 'Aeronave Relacionada',
+            images: 'Imágenes',
+        },
+    },
 }
