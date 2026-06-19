@@ -8,6 +8,8 @@ export const es = {
         error: 'Ocurrió un error',
         success: 'Éxito',
         noExtraDetails: 'No hay detalles adicionales',
+        altoraSubtitle1: 'Registro digital de vuelos',
+        altoraSubtitle2: 'Registrá vuelos, seguí tu progreso y alcanzá tus metas',
     },
     auth: {
         login: 'Iniciar Sesión',
@@ -99,7 +101,14 @@ export const es = {
             paused: 'Pausada',
             completed: 'Completada',
             archived: 'Archivada'
-        }
+        },
+        objectiveType: 'Tipo de objetivo',
+        objectiveTypes: {
+            time: 'Tiempo',
+            distance: 'Distancia',
+        },
+        targetDistance: 'Distancia objetivo',
+        targetDistanceRequired: 'Ingresá una distancia mayor a 0.',
     },
     logs: {
         title: 'Registro de Vuelos',

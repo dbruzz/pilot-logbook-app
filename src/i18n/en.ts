@@ -8,6 +8,8 @@ export const en = {
         error: 'An error occurred',
         success: 'Success',
         noExtraDetails: 'No extra details',
+        altoraSubtitle1: 'Digital Logbook for Pilots',
+        altoraSubtitle2: 'Log flights. Track progress. Achieve goals.',
     },
     auth: {
         login: 'Log In',
@@ -100,6 +102,13 @@ export const en = {
             completed: 'Completed',
             archived: 'Archived',
         },
+        objectiveType: 'Objective type',
+        objectiveTypes: {
+            time: 'Time',
+            distance: 'Distance',
+        },
+        targetDistance: 'Target distance',
+        targetDistanceRequired: 'Enter a distance greater than 0.',
     },
     logs: {
         title: 'Flight Logs',

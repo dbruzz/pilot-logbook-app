@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plane, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import Image from "next/image"
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -54,10 +55,19 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
             <div className="mb-8 flex items-center gap-3">
-                <div className="bg-primary/10 p-3 rounded-2xl text-primary">
-                    <Plane className="w-8 h-8" />
+                <Image
+                    src="/altora-icon.png"
+                    alt="Altora"
+                    width={40}
+                    height={40}
+                    className="w-12 h-12"
+                />
+                <div>
+                    <h1 className="text-2xl font-bold">Altora</h1>
+                    <p className="text-xs text-muted-foreground">
+                        {t.common.altoraSubtitle1}
+                    </p>
                 </div>
-                <span className="font-bold text-3xl tracking-tight">Flight Logbook</span>
             </div>
 
             <Card className="w-full max-w-md border-border/50 shadow-xl shadow-primary/5">

@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from '@/hooks/use-translation'
 import { INavItems } from './NavigationItems'
-import { Plane } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Image from "next/image";
 
 export function Sidebar() {
     const pathname = usePathname()
@@ -14,10 +14,14 @@ export function Sidebar() {
     return (
         <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card h-screen sticky top-0">
             <div className="p-6 flex items-center gap-3">
-                <div className="bg-primary/10 p-2 rounded-xl text-primary">
-                    <Plane className="w-6 h-6" />
-                </div>
-                <span className="font-bold text-xl tracking-tight">Flight Logbook</span>
+                <Image
+                    src="/altora-icon.png"
+                    alt="Altora"
+                    width={40}
+                    height={40}
+                    className="w-12 h-12"
+                />
+                <span className="font-bold text-xl tracking-tight">Altora</span>
             </div>
 
             <nav className="flex-1 px-4 space-y-2 mt-4">
