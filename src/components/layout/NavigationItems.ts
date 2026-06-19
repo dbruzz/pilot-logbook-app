@@ -1,4 +1,4 @@
-import { Home, Target, Plane, Settings, NotebookPen, Goal, BookOpen } from 'lucide-react'
+import { Home, Target, Plane, Settings, NotebookPen, Goal, BookOpen, User } from 'lucide-react'
 
 export const INavItems = [
     {
@@ -30,6 +30,6 @@ export const INavItems = [
     {
         path: '/settings',
         labelKey: 'settings',
-        icon: Settings,
+        icon: User,
     },
 ] as const
