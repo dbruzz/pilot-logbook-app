@@ -23,5 +23,32 @@ export default async function LogsPage() {
         .eq('user_id', user.id)
         .order('description')
 
-    return <LogsClient initialLogs={logsData || []} aircrafts={aircraftsData || []} />
+    // Fetch active goals for the goal selector
+    const { data: activeGoals } = await supabase
+        .from('goals')
+        .select('id, title')
+        .eq('user_id', user.id)
+        .eq('status_id', 1) // status_id 1 = active
+        .order('title')
+
+    // Fetch all existing log↔goal associations for this user's logs
+    const logIds = (logsData || []).map(l => l.id)
+    let logGoalsData: { flight_log_id: number; goal_id: number }[] = []
+    if (logIds.length > 0) {
+        const { data } = await supabase
+            .from('flight_log_goals')
+            .select('flight_log_id, goal_id')
+            .in('flight_log_id', logIds)
+        logGoalsData = data || []
+    }
+
+    return (
+        <LogsClient
+            initialLogs={logsData || []}
+            aircrafts={aircraftsData || []}
+            activeGoals={activeGoals || []}
+            logGoals={logGoalsData}
+        />
+    )
 }
+

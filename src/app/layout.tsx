@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flight Logbook",
+  title: "Altora",
   description: "Web app for tracking flight hours",
 };
 

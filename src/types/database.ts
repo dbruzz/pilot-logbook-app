@@ -44,6 +44,8 @@ export interface Database {
                     end_date: string | null
                     status_id: number
                     is_focus: boolean
+                    goal_type: string | null
+                    custom_goal_type: string | null
                     created_at: string
                     updated_at: string
                     completed_at: string | null
@@ -57,11 +59,23 @@ export interface Database {
                     flight_date: string
                     duration_minutes: number
                     is_instruction: boolean
+                    flight_type: string | null
+                    custom_flight_type: string | null
+                    distance_value: number | null
+                    distance_unit: string | null
                     from_location: string | null
                     to_location: string | null
                     notes: string | null
                     created_at: string
                     updated_at: string
+                }
+            }
+            flight_log_goals: {
+                Row: {
+                    id: number
+                    flight_log_id: number
+                    goal_id: number
+                    created_at: string
                 }
             }
             user_aircrafts: {

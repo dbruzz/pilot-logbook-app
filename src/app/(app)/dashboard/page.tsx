@@ -8,15 +8,40 @@ export default async function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    // Fetch Total Hours
+    // Fetch Total Hours (also join aircraft for the "By Aircraft" breakdown)
     const { data: totalHoursData } = await supabase
         .from('flight_logs')
-        .select('duration_minutes')
+        .select('flight_date, duration_minutes, aircraft_id, user_aircrafts(registration, description)')
         .eq('user_id', user.id)
 
     const totalMinutes = totalHoursData?.reduce((sum, log) => sum + (log.duration_minutes || 0), 0) || 0
     const totalHours = Math.floor(totalMinutes / 60)
     const remainingMinutes = totalMinutes % 60
+
+    // Group by aircraft_id (reliable FK key) for the segmented view
+    const aircraftMinutesMap = new Map<number, { label: string; minutes: number }>()
+    for (const log of totalHoursData || []) {
+        const id = (log as any).aircraft_id
+        if (!id) continue // skip logs with no aircraft assigned
+
+        const aircraft = (log as any).user_aircrafts
+        // user_aircrafts can be an object or an array depending on the relationship config
+        const ac = Array.isArray(aircraft) ? aircraft[0] : aircraft
+        const label = ac
+            ? [ac.registration, ac.description].filter(Boolean).join(' ')
+            : String(id)
+
+        const existing = aircraftMinutesMap.get(id)
+        if (existing) {
+            existing.minutes += log.duration_minutes || 0
+        } else {
+            aircraftMinutesMap.set(id, { label, minutes: log.duration_minutes || 0 })
+        }
+    }
+    const flightsByAircraft = Array.from(aircraftMinutesMap.values())
+        .filter(a => a.minutes > 0)
+        .sort((a, b) => b.minutes - a.minutes)
+
 
     // Fetch Goals
     const { data: goalsData } = await supabase
@@ -72,8 +97,7 @@ export default async function DashboardPage() {
 
     return (
         <DashboardClient
-            totalHours={totalHours}
-            totalMinutes={remainingMinutes}
+            hoursLogs={totalHoursData || []}
             focusGoal={focusGoalWithProgress}
             activeGoals={activeGoalsWithProgress}
             recentFlights={recentFlights || []}

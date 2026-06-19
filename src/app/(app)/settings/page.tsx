@@ -24,12 +24,20 @@ export default async function SettingsPage() {
         .from('languages')
         .select('*')
 
+    const { data: licenses } = await supabase
+        .from('user_licenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
     return (
         <SettingsClient
             profile={profile || {}}
             settings={settings || {}}
             languages={languages || []}
             email={user.email || ''}
+            initialLicenses={licenses || []}
         />
     )
 }
+
