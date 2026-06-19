@@ -8,6 +8,8 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Plane, Goal, Clock, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
+import { formatDuration } from '@/lib/format'
+import { useDisplayPreferences } from '@/hooks/use-display-preferences'
 
 // ─── types ────────────────────────────────────────────────────────
 
@@ -29,11 +31,6 @@ interface DashboardClientProps {
 
 // ─── helpers ──────────────────────────────────────────────────────
 
-function formatDuration(minutes: number) {
-    const h = Math.floor(minutes / 60)
-    const m = minutes % 60
-    return `${h}h ${m}m`
-}
 
 function todayISO() {
     return new Date().toISOString().split('T')[0]
@@ -59,6 +56,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
+    const { durationFormat } = useDisplayPreferences()
 
     // ── hours view state ──────────────────────────────────────────
     const [hoursView, setHoursView] = useState<'total' | 'byAircraft'>('total')
@@ -226,8 +224,9 @@ export default function DashboardClient({
                     <CardContent>
                         {hoursView === 'total' ? (
                             <p className="text-4xl font-bold tracking-tight">
-                                {totalHours}h{' '}
-                                <span className="text-2xl font-semibold text-muted-foreground">{totalRemaining}m</span>
+                                {durationFormat === 'decimal'
+                                    ? <>{formatDuration(totalHours * 60 + totalRemaining, 'decimal')}<span className="text-2xl font-semibold text-muted-foreground ml-1">h</span></>
+                                    : <>{totalHours}<span className="text-2xl font-semibold text-muted-foreground">h</span>{' '}<span className="text-2xl font-semibold text-muted-foreground">{String(totalRemaining).padStart(2,'0')}m</span></>}
                             </p>
                         ) : (
                             <div className="space-y-2">
@@ -246,8 +245,8 @@ export default function DashboardClient({
                                                 <Plane className="w-4 h-4 text-muted-foreground shrink-0" />
                                                 <span className="text-sm font-medium">{aircraft.label}</span>
                                             </div>
-                                            <span className="text-sm font-bold tabular-nums">
-                                                {formatDuration(aircraft.minutes)}
+                                             <span className="text-sm font-bold tabular-nums">
+                                                {formatDuration(aircraft.minutes, durationFormat)}
                                             </span>
                                         </div>
                                     ))
@@ -289,8 +288,8 @@ export default function DashboardClient({
                                 />
 
                                 <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                                    <span>{formatDuration(focusGoal.progress)}</span>
-                                    <span>{formatDuration(focusGoal.target_minutes)} {t.goals.targetMinutes}</span>
+                                    <span>{formatDuration(focusGoal.progress, durationFormat)}</span>
+                                    <span>{formatDuration(focusGoal.target_minutes, durationFormat)} {t.goals.targetMinutes}</span>
                                 </div>
                             </div>
                         ) : (
@@ -331,7 +330,7 @@ export default function DashboardClient({
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-sm">{formatDuration(flight.duration_minutes)}</p>
+                                            <p className="font-bold text-sm">{formatDuration(flight.duration_minutes, durationFormat)}</p>
                                             {flight.user_aircrafts && (
                                                 <p className="text-xs text-muted-foreground mt-1">
                                                     {flight.user_aircrafts.registration || flight.user_aircrafts.description}

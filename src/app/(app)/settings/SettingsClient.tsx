@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -11,6 +11,7 @@ import { updateProfile, updateSettings } from './actions'
 import { logout } from '@/app/(auth)/actions'
 import LicensesClient from './LicensesClient'
 import { cn } from '@/lib/utils'
+import { saveDisplayPreferences } from '@/hooks/use-display-preferences'
 
 // ─────────────────────────────────────────────
 // Shared collapsible wrapper used by all three sections
@@ -88,6 +89,15 @@ export default function SettingsClient({
     const [isSavingProfile, setIsSavingProfile] = useState(false)
     const [isSavingSettings, setIsSavingSettings] = useState(false)
 
+    // Seed localStorage from DB values on first load so other pages can read them
+    useEffect(() => {
+        saveDisplayPreferences({
+            durationFormat: (settings.duration_format as 'hhmm' | 'decimal') ?? 'hhmm',
+            distanceUnit: (settings.distance_unit as 'km' | 'nm' | 'mi') ?? 'km',
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
     const handleSaveProfile = async (formData: FormData) => {
         setIsSavingProfile(true)
         await updateProfile(formData)
@@ -107,6 +117,12 @@ export default function SettingsClient({
             const selectedLang = languages.find(l => l.id.toString() === langId)
             if (selectedLang) setLanguage(selectedLang.description as 'en' | 'es')
         }
+
+        // Persist display preferences to localStorage for use in other pages
+        saveDisplayPreferences({
+            durationFormat: (formData.get('duration_format') as 'hhmm' | 'decimal') ?? 'hhmm',
+            distanceUnit: (formData.get('distance_unit') as 'km' | 'nm' | 'mi') ?? 'km',
+        })
 
         await updateSettings(formData)
         setIsSavingSettings(false)
@@ -189,7 +205,8 @@ export default function SettingsClient({
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1">
+                    {/* TODO enable notifications for licence and documentation */}
+                    {/* <div className="flex items-center gap-2 pt-1">
                         <input
                             type="checkbox"
                             id="notifications_enabled"
@@ -203,9 +220,9 @@ export default function SettingsClient({
                         >
                             {t.settings.notifications}
                         </label>
-                    </div>
+                    </div> */}
 
-                    <div className="space-y-2 pt-1">
+                    {/* <div className="space-y-2 pt-1">
                         <label className="text-sm font-medium">Avatar Type</label>
                         <Select
                             name="avatar_type"
@@ -213,6 +230,31 @@ export default function SettingsClient({
                             options={[
                                 { value: 'initials', label: 'Initials' },
                                 { value: 'emoji', label: 'Emoji' },
+                            ]}
+                        />
+                    </div> */}
+
+                    <div className="space-y-2 pt-1">
+                        <label className="text-sm font-medium">{t.settings.durationFormat.label}</label>
+                        <Select
+                            name="duration_format"
+                            defaultValue={settings.duration_format || 'hhmm'}
+                            options={[
+                                { value: 'hhmm', label: t.settings.durationFormat.hhmm },
+                                { value: 'decimal', label: t.settings.durationFormat.decimal },
+                            ]}
+                        />
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                        <label className="text-sm font-medium">{t.settings.distanceUnit.label}</label>
+                        <Select
+                            name="distance_unit"
+                            defaultValue={settings.distance_unit || 'km'}
+                            options={[
+                                { value: 'km', label: t.settings.distanceUnit.km },
+                                { value: 'nm', label: t.settings.distanceUnit.nm },
+                                { value: 'mi', label: t.settings.distanceUnit.mi },
                             ]}
                         />
                     </div>

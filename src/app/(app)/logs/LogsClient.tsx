@@ -11,6 +11,8 @@ import { Plus, Trash2, Pencil, Calendar, Plane as PlaneIcon, MapPin, Clock, Rule
 import { createLog, deleteLog, updateLog } from './actions'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
+import { formatDuration } from '@/lib/format'
+import { useDisplayPreferences } from '@/hooks/use-display-preferences'
 
 export default function LogsClient({
     initialLogs,
@@ -25,6 +27,7 @@ export default function LogsClient({
 }) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
+    const { durationFormat } = useDisplayPreferences()
 
     // Build a Set lookup: logId -> Set<goalId>
     const logGoalMap = new Map<number, Set<number>>()
@@ -55,11 +58,6 @@ export default function LogsClient({
         window.location.reload()
     }
 
-    const formatDuration = (minutes: number) => {
-        const h = Math.floor(minutes / 60)
-        const m = minutes % 60
-        return `${h}h ${m}m`
-    }
 
     const formatToInputTime = (minutes: number) => {
         const h = Math.floor(minutes / 60).toString().padStart(2, '0')
@@ -126,7 +124,7 @@ export default function LogsClient({
                                         <span className="text-muted-foreground/40">—</span>
                                     )}
                                 </div>
-                                <span className="text-xl font-bold">{formatDuration(log.duration_minutes)}</span>
+                                <span className="text-xl font-bold">{formatDuration(log.duration_minutes, durationFormat)}</span>
                             </div>
 
                             {/* Row 3: Flight type badge */}

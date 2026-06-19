@@ -31,6 +31,8 @@ export async function updateSettings(formData: FormData) {
     const theme = formData.get('theme') as 'light' | 'dark' | 'system'
     const notifications_enabled = formData.get('notifications_enabled') === 'on'
     const avatar_type = formData.get('avatar_type') as 'emoji' | 'initials'
+    const duration_format = (formData.get('duration_format') as string) || 'hhmm'
+    const distance_unit = (formData.get('distance_unit') as string) || 'km'
 
     const { error } = await supabase
         .from('user_settings')
@@ -39,6 +41,8 @@ export async function updateSettings(formData: FormData) {
             theme,
             notifications_enabled,
             avatar_type,
+            duration_format,
+            distance_unit,
             updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)

@@ -148,6 +148,17 @@ export const en = {
             system: 'System',
         },
         notifications: 'Notifications',
+        durationFormat: {
+            label: 'Duration format',
+            hhmm: 'Hours and minutes (1:30)',
+            decimal: 'Decimal hours (1.5)',
+        },
+        distanceUnit: {
+            label: 'Distance unit',
+            km: 'Kilometers (km)',
+            nm: 'Nautical miles (NM)',
+            mi: 'Miles (mi)',
+        },
     },
     aircrafts: {
         title: 'My Aircrafts',
