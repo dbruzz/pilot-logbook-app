@@ -2,27 +2,53 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plane } from 'lucide-react'
+import { Plane, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useTranslation } from '@/hooks/use-translation'
-import { login } from '../actions'
+import { login, resendConfirmation } from '../actions'
 
 export default function LoginPage() {
     const { t } = useTranslation()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
+    // When the account exists but email is not confirmed, we store the email
+    // to allow the user to request a new confirmation email.
+    const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
+    const [isResending, setIsResending] = useState(false)
 
     const handleSubmit = async (formData: FormData) => {
         setIsLoading(true)
         setError(null)
+        setUnconfirmedEmail(null)
         const result = await login(formData)
-        if (result?.error) {
-            setError(result.error)
+        if (result?.errorCode) {
+            if (result.errorCode === 'emailNotConfirmed' && result.email) {
+                setUnconfirmedEmail(result.email)
+                setError(t.auth.errors.emailNotConfirmed)
+            } else {
+                const code = result.errorCode as keyof typeof t.auth.errors
+                setError(t.auth.errors[code] ?? t.auth.errors.generic)
+            }
             setIsLoading(false)
         }
         // if successful, it redirects
+    }
+
+    const handleResend = async () => {
+        if (!unconfirmedEmail) return
+        setIsResending(true)
+        const result = await resendConfirmation(unconfirmedEmail)
+        setIsResending(false)
+        if (result?.errorCode) {
+            setError(t.auth.errors.resendError)
+        } else {
+            // Hide the resend button and show the success message
+            setUnconfirmedEmail(null)
+            setError(t.auth.errors.resendSuccess)
+        }
     }
 
     return (
@@ -59,17 +85,39 @@ export default function LoginPage() {
                             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
                                 {t.auth.password}
                             </label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    className="pr-10"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label={showPassword ? t.auth.hidePassword : t.auth.showPassword}
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         {error && (
                             <div className="p-3 bg-destructive/15 text-destructive text-sm rounded-lg border border-destructive/20">
-                                {error}
+                                <p>{error}</p>
+                                {unconfirmedEmail && (
+                                    <button
+                                        type="button"
+                                        onClick={handleResend}
+                                        disabled={isResending}
+                                        className="mt-2 text-xs underline underline-offset-2 hover:opacity-80 transition-opacity disabled:opacity-50"
+                                    >
+                                        {isResending ? t.auth.resending : t.auth.resendConfirmation}
+                                    </button>
+                                )}
                             </div>
                         )}
 

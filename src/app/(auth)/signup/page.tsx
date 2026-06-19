@@ -2,31 +2,70 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plane } from 'lucide-react'
+import { Plane, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useTranslation } from '@/hooks/use-translation'
-import { signup } from '../actions'
+import { signup, resendConfirmation } from '../actions'
 
 export default function SignupPage() {
     const { t } = useTranslation()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    // Stores the email when the account exists but is unverified, to enable manual resend
+    const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+    const [isResending, setIsResending] = useState(false)
 
     const handleSubmit = async (formData: FormData) => {
         setIsLoading(true)
         setError(null)
+        setUnverifiedEmail(null)
+
+        const language = navigator.language.startsWith('es') ? 'es' : 'en'
+        formData.append('language', language)
+
         const result = await signup(formData)
-        if (result?.error) {
-            setError(result.error)
+
+        if (result?.errorCode) {
+            if (result.errorCode === 'emailExists' && result.email) {
+                // Email is taken (verified or not — we don't know yet).
+                // Show message + resend button; the resend outcome reveals which case it is.
+                setUnverifiedEmail(result.email)
+                setError(t.auth.errors.emailExists)
+            } else {
+                const code = result.errorCode as keyof typeof t.auth.errors
+                setError(t.auth.errors[code] ?? t.auth.errors.generic)
+            }
             setIsLoading(false)
         } else if (result?.needsEmailConfirmation) {
             setNeedsEmailConfirmation(true)
             setIsLoading(false)
         }
     }
+
+    const handleResend = async () => {
+        if (!unverifiedEmail) return
+        setIsResending(true)
+        const result = await resendConfirmation(unverifiedEmail)
+        setIsResending(false)
+        if (result?.errorCode === 'emailAlreadyVerified') {
+            // Supabase rejected the resend because the email is already confirmed:
+            // direct the user to log in instead.
+            setUnverifiedEmail(null)
+            setError(t.auth.errors.emailAlreadyVerified)
+        } else if (result?.errorCode) {
+            // Generic resend failure — keep the button so the user can retry
+            setError(t.auth.errors.resendError)
+        } else {
+            // Resend succeeded — account was unverified, email sent
+            setUnverifiedEmail(null)
+            setError(t.auth.errors.resendSuccess)
+        }
+    }
+
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -72,18 +111,40 @@ export default function SignupPage() {
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
                                     {t.auth.password}
                                 </label>
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    minLength={6}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        minLength={6}
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((v) => !v)}
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
+                                        aria-label={showPassword ? t.auth.hidePassword : t.auth.showPassword}
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
                             </div>
 
                             {error && (
                                 <div className="p-3 bg-destructive/15 text-destructive text-sm rounded-lg border border-destructive/20">
-                                    {error}
+                                    <p>{error}</p>
+                                    {unverifiedEmail && (
+                                        <button
+                                            type="button"
+                                            onClick={handleResend}
+                                            disabled={isResending}
+                                            className="mt-2 text-xs underline underline-offset-2 hover:opacity-80 transition-opacity disabled:opacity-50"
+                                        >
+                                            {isResending ? t.auth.resending : t.auth.resendConfirmation}
+                                        </button>
+                                    )}
                                 </div>
                             )}
 
