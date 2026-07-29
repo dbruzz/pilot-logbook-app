@@ -12,22 +12,26 @@ import { createLog, deleteLog, updateLog } from './actions'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
 import { formatDuration } from '@/lib/format'
-import { useDisplayPreferences } from '@/hooks/use-display-preferences'
+import type { DurationFormat, DistanceUnit } from '@/lib/format'
 
 export default function LogsClient({
     initialLogs,
     aircrafts,
     activeGoals,
     logGoals,
+    distanceUnit,
+    durationFormat,
 }: {
     initialLogs: any[]
     aircrafts: any[]
     activeGoals: { id: number; title: string }[]
     logGoals: { flight_log_id: number; goal_id: number }[]
+    distanceUnit: DistanceUnit
+    durationFormat: DurationFormat
 }) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
-    const { durationFormat } = useDisplayPreferences()
+    const unitLabel = distanceUnit === 'nm' ? 'NM' : distanceUnit
 
     // Build a Set lookup: logId -> Set<goalId>
     const logGoalMap = new Map<number, Set<number>>()
@@ -223,24 +227,19 @@ export default function LogsClient({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">{t.logs.distance}</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input
-                                type="number"
-                                name="distance_value"
-                                min={0}
-                                step="any"
-                                placeholder="0"
-                            />
-                            <Select
-                                name="distance_unit"
-                                options={[
-                                    { value: 'km', label: t.logs.distanceUnits.km },
-                                    { value: 'nm', label: t.logs.distanceUnits.nm },
-                                    { value: 'mi', label: t.logs.distanceUnits.mi },
-                                ]}
-                            />
-                        </div>
+                        <label className="text-sm font-medium">
+                            {t.logs.distance}
+                            {' '}
+                            <span className="text-xs text-muted-foreground font-normal">({unitLabel})</span>
+                        </label>
+                        <Input
+                            type="number"
+                            name="distance_value"
+                            min={0}
+                            step="any"
+                            placeholder="0"
+                        />
+                        <input type="hidden" name="distance_unit" value={distanceUnit} />
                     </div>
 
                     {/* <div className="space-y-2">
@@ -349,26 +348,20 @@ export default function LogsClient({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">{t.logs.distance}</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                    type="number"
-                                    name="distance_value"
-                                    min={0}
-                                    step="any"
-                                    placeholder="0"
-                                    defaultValue={editingLog.distance_value ?? ''}
-                                />
-                                <Select
-                                    name="distance_unit"
-                                    defaultValue={editingLog.distance_unit || 'km'}
-                                    options={[
-                                        { value: 'km', label: t.logs.distanceUnits.km },
-                                        { value: 'nm', label: t.logs.distanceUnits.nm },
-                                        { value: 'mi', label: t.logs.distanceUnits.mi },
-                                    ]}
-                                />
-                            </div>
+                            <label className="text-sm font-medium">
+                                {t.logs.distance}
+                                {' '}
+                                <span className="text-xs text-muted-foreground font-normal">({unitLabel})</span>
+                            </label>
+                            <Input
+                                type="number"
+                                name="distance_value"
+                                min={0}
+                                step="any"
+                                placeholder="0"
+                                defaultValue={editingLog.distance_value ?? ''}
+                            />
+                            <input type="hidden" name="distance_unit" value={distanceUnit} />
                         </div>
 
                         <div className="space-y-2">

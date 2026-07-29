@@ -49,6 +49,8 @@ export const en = {
     },
     dashboard: {
         totalHours: 'Total Hours',
+        totalDistance: 'Total Distance',
+        totalFlights: 'Total Flights',
         total: 'Total',
         byAircraft: 'By Aircraft',
         unknownAircraft: 'Unknown Aircraft',

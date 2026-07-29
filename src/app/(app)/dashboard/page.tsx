@@ -9,19 +9,20 @@ export default async function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    // Fetch user's preferred distance unit
+    // Fetch user's preferred distance unit and duration format
     const { data: userSettings } = await supabase
         .from('user_settings')
-        .select('distance_unit')
+        .select('distance_unit, duration_format')
         .eq('user_id', user.id)
         .single()
 
     const distanceUnit = (userSettings?.distance_unit as 'km' | 'nm' | 'mi') || 'km'
+    const durationFormat = (userSettings?.duration_format as 'hhmm' | 'decimal') || 'hhmm'
 
-    // Fetch Total Hours (also join aircraft for the "By Aircraft" breakdown)
+    // Fetch all flights (joined with aircraft) for the summary card
     const { data: totalHoursData } = await supabase
         .from('flight_logs')
-        .select('flight_date, duration_minutes, aircraft_id, user_aircrafts(registration, description)')
+        .select('flight_date, duration_minutes, aircraft_id, distance_value, distance_unit, user_aircrafts(registration, description)')
         .eq('user_id', user.id)
 
     const totalMinutes = totalHoursData?.reduce((sum, log) => sum + (log.duration_minutes || 0), 0) || 0
@@ -124,6 +125,7 @@ export default async function DashboardPage() {
             activeGoals={activeGoalsWithProgress}
             recentFlights={recentFlights || []}
             distanceUnit={distanceUnit}
+            durationFormat={durationFormat}
         />
     )
 }

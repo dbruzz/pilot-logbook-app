@@ -31,6 +31,8 @@ export interface Database {
                     is_active: boolean | null
                     created_at: string
                     updated_at: string
+                    distance_unit: string | null
+                    duration_format: string | null
                 }
             }
             goals: {

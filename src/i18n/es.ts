@@ -49,6 +49,8 @@ export const es = {
     },
     dashboard: {
         totalHours: 'Horas Totales',
+        totalDistance: 'Distancia Total',
+        totalFlights: 'Vuelos Totales',
         total: 'Total',
         byAircraft: 'Por Aeronave',
         unknownAircraft: 'Aeronave desconocida',

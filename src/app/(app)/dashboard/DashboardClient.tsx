@@ -5,33 +5,37 @@ import { useTranslation } from '@/hooks/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { Plane, Goal, Clock, Calendar, Hash } from 'lucide-react'
+import { Plane, Goal, Clock, Calendar, Hash, Ruler } from 'lucide-react'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
-import { formatDuration, formatDistance } from '@/lib/format'
-import { useDisplayPreferences } from '@/hooks/use-display-preferences'
+import { formatDuration, formatDistance, convertDistance } from '@/lib/format'
+import type { DurationFormat, DistanceUnit } from '@/lib/format'
 
 // ─── types ────────────────────────────────────────────────────────
 
 type DateFilter = 'allTime' | 'thisYear' | 'thisMonth' | 'custom'
+type Metric = 'hours' | 'distance' | 'flights'
+type BreakdownView = 'total' | 'byAircraft'
 
-interface HoursLog {
+interface FlightLog {
     flight_date: string
     duration_minutes: number
     aircraft_id: number | null
+    distance_value: number | null
+    distance_unit: string | null
     user_aircrafts: { registration: string | null; description: string } | { registration: string | null; description: string }[] | null
 }
 
 interface DashboardClientProps {
-    hoursLogs: HoursLog[]
+    hoursLogs: FlightLog[]
     focusGoal: any | null
     activeGoals: any[]
     recentFlights: any[]
-    distanceUnit: 'km' | 'nm' | 'mi'
+    distanceUnit: DistanceUnit
+    durationFormat: DurationFormat
 }
 
 // ─── helpers ──────────────────────────────────────────────────────
-
 
 function todayISO() {
     return new Date().toISOString().split('T')[0]
@@ -47,6 +51,12 @@ function thisMonthStart() {
     return `${d.getFullYear()}-${mm}-01`
 }
 
+function getAircraftLabel(log: FlightLog): string {
+    const raw = log.user_aircrafts
+    const ac = Array.isArray(raw) ? raw[0] : raw
+    return ac ? [ac.registration, ac.description].filter(Boolean).join(' ') : String(log.aircraft_id)
+}
+
 // ─── component ────────────────────────────────────────────────────
 
 export default function DashboardClient({
@@ -55,13 +65,16 @@ export default function DashboardClient({
     activeGoals,
     recentFlights,
     distanceUnit,
+    durationFormat,
 }: DashboardClientProps) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
-    const { durationFormat } = useDisplayPreferences()
 
-    // ── hours view state ──────────────────────────────────────────
-    const [hoursView, setHoursView] = useState<'total' | 'byAircraft'>('total')
+    // ── metric state ──────────────────────────────────────────────
+    const [metric, setMetric] = useState<Metric>('hours')
+
+    // ── breakdown view state ──────────────────────────────────────
+    const [breakdownView, setBreakdownView] = useState<BreakdownView>('total')
 
     // ── date filter state ─────────────────────────────────────────
     const [dateFilter, setDateFilter] = useState<DateFilter>('allTime')
@@ -91,36 +104,37 @@ export default function DashboardClient({
         })
     }, [hoursLogs, dateFilter, customFrom, customTo])
 
-    // ── derived totals ────────────────────────────────────────────
-    const { totalHours, totalRemaining, flightsByAircraft } = useMemo(() => {
+    // ── derived totals (all three metrics + per-aircraft) ─────────
+    const totals = useMemo(() => {
         const totalMins = filteredLogs.reduce((sum, l) => sum + (l.duration_minutes || 0), 0)
+        const totalFlightCount = filteredLogs.length
+        const totalDist = filteredLogs.reduce((sum, l) => {
+            if (!l.distance_value || !l.distance_unit) return sum
+            return sum + convertDistance(l.distance_value, l.distance_unit, distanceUnit)
+        }, 0)
 
-        const aircraftMap = new Map<number, { label: string; minutes: number }>()
+        // Per-aircraft breakdown
+        const aircraftMap = new Map<number, { label: string; minutes: number; distance: number; flights: number }>()
         for (const log of filteredLogs) {
             const id = log.aircraft_id
             if (!id) continue
-            const raw = log.user_aircrafts
-            const ac = Array.isArray(raw) ? raw[0] : raw
-            const label = ac
-                ? [ac.registration, ac.description].filter(Boolean).join(' ')
-                : String(id)
+            const label = getAircraftLabel(log)
+            const dist = (log.distance_value && log.distance_unit)
+                ? convertDistance(log.distance_value, log.distance_unit, distanceUnit)
+                : 0
             const ex = aircraftMap.get(id)
             if (ex) {
                 ex.minutes += log.duration_minutes || 0
+                ex.distance += dist
+                ex.flights += 1
             } else {
-                aircraftMap.set(id, { label, minutes: log.duration_minutes || 0 })
+                aircraftMap.set(id, { label, minutes: log.duration_minutes || 0, distance: dist, flights: 1 })
             }
         }
-        const byAircraft = Array.from(aircraftMap.values())
-            .filter(a => a.minutes > 0)
-            .sort((a, b) => b.minutes - a.minutes)
+        const byAircraft = Array.from(aircraftMap.values()).sort((a, b) => b.minutes - a.minutes)
 
-        return {
-            totalHours: Math.floor(totalMins / 60),
-            totalRemaining: totalMins % 60,
-            flightsByAircraft: byAircraft,
-        }
-    }, [filteredLogs])
+        return { totalMins, totalFlightCount, totalDist, byAircraft }
+    }, [filteredLogs, distanceUnit])
 
     // ─── render ───────────────────────────────────────────────────
 
@@ -131,6 +145,55 @@ export default function DashboardClient({
         { value: 'custom', label: t.dashboard.filter.custom },
     ]
 
+    // Card title & icon based on selected metric
+    const metricConfig = {
+        hours:    { icon: <Clock className="w-5 h-5 text-muted-foreground" />,  label: t.dashboard.totalHours },
+        distance: { icon: <Ruler className="w-5 h-5 text-muted-foreground" />,  label: t.dashboard.totalDistance },
+        flights:  { icon: <Plane className="w-5 h-5 text-muted-foreground" />,  label: t.dashboard.totalFlights },
+    }
+
+    // Total value display
+    const renderTotalValue = () => {
+        if (metric === 'hours') {
+            const h = Math.floor(totals.totalMins / 60)
+            const m = totals.totalMins % 60
+            return (
+                <p className="text-4xl font-bold tracking-tight">
+                    {durationFormat === 'decimal'
+                        ? <>{formatDuration(totals.totalMins, 'decimal')}<span className="text-2xl font-semibold text-muted-foreground ml-1">h</span></>
+                        : <>{h}<span className="text-2xl font-semibold text-muted-foreground">h</span>{' '}<span className="text-2xl font-semibold text-muted-foreground">{String(m).padStart(2, '0')}m</span></>
+                    }
+                </p>
+            )
+        }
+        if (metric === 'distance') {
+            return (
+                <p className="text-4xl font-bold tracking-tight">
+                    {totals.totalDist > 0
+                        ? <>{totals.totalDist.toFixed(1)}<span className="text-2xl font-semibold text-muted-foreground ml-1">{distanceUnit === 'nm' ? 'NM' : distanceUnit}</span></>
+                        : <span className="text-muted-foreground text-2xl">— {distanceUnit === 'nm' ? 'NM' : distanceUnit}</span>
+                    }
+                </p>
+            )
+        }
+        // flights
+        return (
+            <p className="text-4xl font-bold tracking-tight">
+                {totals.totalFlightCount}
+                <span className="text-2xl font-semibold text-muted-foreground ml-1">
+                    {language === 'es' ? 'vuelos' : 'flights'}
+                </span>
+            </p>
+        )
+    }
+
+    // Per-aircraft value display
+    const renderAircraftValue = (ac: { label: string; minutes: number; distance: number; flights: number }) => {
+        if (metric === 'hours') return <span className="text-sm font-bold tabular-nums">{formatDuration(ac.minutes, durationFormat)}</span>
+        if (metric === 'distance') return <span className="text-sm font-bold tabular-nums">{formatDistance(ac.distance, distanceUnit)}</span>
+        return <span className="text-sm font-bold tabular-nums">{ac.flights}</span>
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -140,22 +203,43 @@ export default function DashboardClient({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
-                {/* ── Flight Hours Card ────────────────────────── */}
+                {/* ── Summary Card ────────────────────────── */}
                 <Card>
                     <CardHeader className="pb-3">
-                        {/* Row 1: title + segmented control */}
+                        {/* Row 1: metric toggle (Hours / Distance / Flights) + Total / By Aircraft */}
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-muted-foreground" />
-                                <CardTitle className="text-lg">{t.dashboard.totalHours}</CardTitle>
+                            {/* Metric selector — three-way pill */}
+                            <div className="flex items-center bg-secondary rounded-lg p-1 gap-1">
+                                {(['hours', 'distance', 'flights'] as Metric[]).map(m => (
+                                    <button
+                                        key={m}
+                                        onClick={() => setMetric(m)}
+                                        className={[
+                                            'flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-all',
+                                            metric === m
+                                                ? 'bg-background shadow text-foreground'
+                                                : 'text-muted-foreground hover:text-foreground',
+                                        ].join(' ')}
+                                    >
+                                        {m === 'hours'    && <Clock  className="w-3.5 h-3.5" />}
+                                        {m === 'distance' && <Ruler  className="w-3.5 h-3.5" />}
+                                        {m === 'flights'  && <Hash   className="w-3.5 h-3.5" />}
+                                        <span className="hidden sm:inline">
+                                            {m === 'hours'    ? t.dashboard.totalHours
+                                            : m === 'distance' ? t.dashboard.totalDistance
+                                            : t.dashboard.totalFlights}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
-                            {/* Segmented control */}
+
+                            {/* Total / By Aircraft toggle */}
                             <div className="flex items-center bg-secondary rounded-lg p-1 gap-1">
                                 <button
-                                    onClick={() => setHoursView('total')}
+                                    onClick={() => setBreakdownView('total')}
                                     className={[
                                         'text-sm font-medium px-3 py-1 rounded-md transition-all',
-                                        hoursView === 'total'
+                                        breakdownView === 'total'
                                             ? 'bg-background shadow text-foreground'
                                             : 'text-muted-foreground hover:text-foreground',
                                     ].join(' ')}
@@ -163,10 +247,10 @@ export default function DashboardClient({
                                     {t.dashboard.total}
                                 </button>
                                 <button
-                                    onClick={() => setHoursView('byAircraft')}
+                                    onClick={() => setBreakdownView('byAircraft')}
                                     className={[
                                         'text-sm font-medium px-3 py-1 rounded-md transition-all',
-                                        hoursView === 'byAircraft'
+                                        breakdownView === 'byAircraft'
                                             ? 'bg-background shadow text-foreground'
                                             : 'text-muted-foreground hover:text-foreground',
                                     ].join(' ')}
@@ -194,7 +278,7 @@ export default function DashboardClient({
                             ))}
                         </div>
 
-                        {/* Row 3: custom range inputs (only when "Custom" is active) */}
+                        {/* Row 3: custom range inputs */}
                         {dateFilter === 'custom' && (
                             <div className="mt-3 flex flex-wrap items-center gap-3">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -224,21 +308,17 @@ export default function DashboardClient({
                     </CardHeader>
 
                     <CardContent>
-                        {hoursView === 'total' ? (
-                            <p className="text-4xl font-bold tracking-tight">
-                                {durationFormat === 'decimal'
-                                    ? <>{formatDuration(totalHours * 60 + totalRemaining, 'decimal')}<span className="text-2xl font-semibold text-muted-foreground ml-1">h</span></>
-                                    : <>{totalHours}<span className="text-2xl font-semibold text-muted-foreground">h</span>{' '}<span className="text-2xl font-semibold text-muted-foreground">{String(totalRemaining).padStart(2,'0')}m</span></>}
-                            </p>
+                        {breakdownView === 'total' ? (
+                            renderTotalValue()
                         ) : (
                             <div className="space-y-2">
-                                {flightsByAircraft.length === 0 ? (
+                                {totals.byAircraft.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
                                         <Plane className="w-10 h-10 mb-3 opacity-20" />
                                         <p className="text-sm">{t.dashboard.noFlights}</p>
                                     </div>
                                 ) : (
-                                    flightsByAircraft.map((aircraft, idx) => (
+                                    totals.byAircraft.map((aircraft, idx) => (
                                         <div
                                             key={idx}
                                             className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
@@ -247,9 +327,7 @@ export default function DashboardClient({
                                                 <Plane className="w-4 h-4 text-muted-foreground shrink-0" />
                                                 <span className="text-sm font-medium">{aircraft.label}</span>
                                             </div>
-                                             <span className="text-sm font-bold tabular-nums">
-                                                {formatDuration(aircraft.minutes, durationFormat)}
-                                            </span>
+                                            {renderAircraftValue(aircraft)}
                                         </div>
                                     ))
                                 )}
@@ -301,13 +379,13 @@ export default function DashboardClient({
                                 <div className="flex justify-between text-xs text-muted-foreground font-medium">
                                     {focusGoal.objective_type === 'distance' ? (
                                         <>
-                                            <span>{formatDistance(focusGoal.progress, (focusGoal.target_distance_unit || distanceUnit) as 'km' | 'nm' | 'mi')}</span>
-                                            <span>{formatDistance(focusGoal.target_distance, (focusGoal.target_distance_unit || distanceUnit) as 'km' | 'nm' | 'mi')}</span>
+                                            <span>{formatDistance(focusGoal.progress, (focusGoal.target_distance_unit || distanceUnit) as DistanceUnit)}</span>
+                                            <span>{formatDistance(focusGoal.target_distance, (focusGoal.target_distance_unit || distanceUnit) as DistanceUnit)}</span>
                                         </>
                                     ) : focusGoal.objective_type === 'flight_count' ? (
                                         <>
-                                            <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{focusGoal.progress} flights</span>
-                                            <span>{focusGoal.target_flight_count} flights</span>
+                                            <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{focusGoal.progress} {language === 'es' ? 'vuelos' : 'flights'}</span>
+                                            <span>{focusGoal.target_flight_count} {language === 'es' ? 'vuelos' : 'flights'}</span>
                                         </>
                                     ) : (
                                         <>
@@ -347,11 +425,13 @@ export default function DashboardClient({
                                                 <p className="font-medium text-sm">
                                                     {format(new Date(flight.flight_date), 'dd MMM yyyy', { locale: dateLocale })}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground flex gap-1 items-center mt-1">
-                                                    <span>{flight.from_location || '?'}</span>
-                                                    <span>→</span>
-                                                    <span>{flight.to_location || '?'}</span>
-                                                </p>
+                                                {(flight.from_location || flight.to_location) && (
+                                                    <p className="text-xs text-muted-foreground flex gap-1 items-center mt-1">
+                                                        <span>{flight.from_location || '?'}</span>
+                                                        <span>→</span>
+                                                        <span>{flight.to_location || '?'}</span>
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="text-right">

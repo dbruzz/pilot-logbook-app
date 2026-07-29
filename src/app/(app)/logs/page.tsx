@@ -8,6 +8,16 @@ export default async function LogsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
+    // Fetch user's preferred distance unit and duration format
+    const { data: userSettings } = await supabase
+        .from('user_settings')
+        .select('distance_unit, duration_format')
+        .eq('user_id', user.id)
+        .single()
+
+    const distanceUnit = (userSettings?.distance_unit as 'km' | 'nm' | 'mi') || 'km'
+    const durationFormat = (userSettings?.duration_format as 'hhmm' | 'decimal') || 'hhmm'
+
     const { data: logsData } = await supabase
         .from('flight_logs')
         .select(`
@@ -48,6 +58,8 @@ export default async function LogsPage() {
             aircrafts={aircraftsData || []}
             activeGoals={activeGoals || []}
             logGoals={logGoalsData}
+            distanceUnit={distanceUnit}
+            durationFormat={durationFormat}
         />
     )
 }
