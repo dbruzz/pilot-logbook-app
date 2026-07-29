@@ -5,10 +5,10 @@ import { useTranslation } from '@/hooks/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { Plane, Goal, Clock, Calendar } from 'lucide-react'
+import { Plane, Goal, Clock, Calendar, Hash } from 'lucide-react'
 import { format } from 'date-fns'
 import { es, enUS } from 'date-fns/locale'
-import { formatDuration } from '@/lib/format'
+import { formatDuration, formatDistance } from '@/lib/format'
 import { useDisplayPreferences } from '@/hooks/use-display-preferences'
 
 // ─── types ────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ interface DashboardClientProps {
     focusGoal: any | null
     activeGoals: any[]
     recentFlights: any[]
+    distanceUnit: 'km' | 'nm' | 'mi'
 }
 
 // ─── helpers ──────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ export default function DashboardClient({
     focusGoal,
     activeGoals,
     recentFlights,
+    distanceUnit,
 }: DashboardClientProps) {
     const { t, language } = useTranslation()
     const dateLocale = language === 'es' ? es : enUS
@@ -276,20 +278,43 @@ export default function DashboardClient({
                                     </div>
                                     <div className="text-right">
                                         <span className="text-2xl font-bold text-primary">
-                                            {Math.round((focusGoal.progress / focusGoal.target_minutes) * 100)}%
+                                            {focusGoal.objective_type === 'distance'
+                                                ? `${Math.round((focusGoal.progress / (focusGoal.target_distance || 1)) * 100)}%`
+                                                : focusGoal.objective_type === 'flight_count'
+                                                    ? `${Math.round((focusGoal.progress / (focusGoal.target_flight_count || 1)) * 100)}%`
+                                                    : `${Math.round((focusGoal.progress / focusGoal.target_minutes) * 100)}%`
+                                            }
                                         </span>
                                     </div>
                                 </div>
 
                                 <ProgressBar
                                     value={focusGoal.progress}
-                                    max={focusGoal.target_minutes}
+                                    max={focusGoal.objective_type === 'distance'
+                                        ? (focusGoal.target_distance || 1)
+                                        : focusGoal.objective_type === 'flight_count'
+                                            ? (focusGoal.target_flight_count || 1)
+                                            : focusGoal.target_minutes}
                                     className="h-4"
                                 />
 
                                 <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                                    <span>{formatDuration(focusGoal.progress, durationFormat)}</span>
-                                    <span>{formatDuration(focusGoal.target_minutes, durationFormat)} {t.goals.targetMinutes}</span>
+                                    {focusGoal.objective_type === 'distance' ? (
+                                        <>
+                                            <span>{formatDistance(focusGoal.progress, (focusGoal.target_distance_unit || distanceUnit) as 'km' | 'nm' | 'mi')}</span>
+                                            <span>{formatDistance(focusGoal.target_distance, (focusGoal.target_distance_unit || distanceUnit) as 'km' | 'nm' | 'mi')}</span>
+                                        </>
+                                    ) : focusGoal.objective_type === 'flight_count' ? (
+                                        <>
+                                            <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{focusGoal.progress} flights</span>
+                                            <span>{focusGoal.target_flight_count} flights</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>{formatDuration(focusGoal.progress, durationFormat)}</span>
+                                            <span>{formatDuration(focusGoal.target_minutes, durationFormat)} {t.goals.targetMinutes}</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ) : (

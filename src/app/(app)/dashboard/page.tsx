@@ -1,12 +1,22 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardClient from './DashboardClient'
+import { convertDistance } from '@/lib/format'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/login')
+
+    // Fetch user's preferred distance unit
+    const { data: userSettings } = await supabase
+        .from('user_settings')
+        .select('distance_unit')
+        .eq('user_id', user.id)
+        .single()
+
+    const distanceUnit = (userSettings?.distance_unit as 'km' | 'nm' | 'mi') || 'km'
 
     // Fetch Total Hours (also join aircraft for the "By Aircraft" breakdown)
     const { data: totalHoursData } = await supabase
@@ -18,14 +28,13 @@ export default async function DashboardPage() {
     const totalHours = Math.floor(totalMinutes / 60)
     const remainingMinutes = totalMinutes % 60
 
-    // Group by aircraft_id (reliable FK key) for the segmented view
+    // Group by aircraft_id for the segmented view
     const aircraftMinutesMap = new Map<number, { label: string; minutes: number }>()
     for (const log of totalHoursData || []) {
         const id = (log as any).aircraft_id
-        if (!id) continue // skip logs with no aircraft assigned
+        if (!id) continue
 
         const aircraft = (log as any).user_aircrafts
-        // user_aircrafts can be an object or an array depending on the relationship config
         const ac = Array.isArray(aircraft) ? aircraft[0] : aircraft
         const label = ac
             ? [ac.registration, ac.description].filter(Boolean).join(' ')
@@ -41,7 +50,6 @@ export default async function DashboardPage() {
     const flightsByAircraft = Array.from(aircraftMinutesMap.values())
         .filter(a => a.minutes > 0)
         .sort((a, b) => b.minutes - a.minutes)
-
 
     // Fetch Goals
     const { data: goalsData } = await supabase
@@ -63,17 +71,15 @@ export default async function DashboardPage() {
         .order('flight_date', { ascending: false })
         .limit(5)
 
-    // Calculate Goal Progress for each active goal (and focus goal)
-    // To avoid multiple queries here, we'll fetch all flight logs or at least those needed for active goals
-    // If there are many flight logs, fetching all might be inefficient.
-    // We already fetched duration_minutes and flight_date to do this calculation.
+    // All flights with distance for progress calculation
     const { data: allFlights } = await supabase
         .from('flight_logs')
-        .select('duration_minutes, flight_date')
+        .select('duration_minutes, flight_date, distance_value, distance_unit')
         .eq('user_id', user.id)
 
-    const calculateProgress = (goal: any) => {
+    const calculateProgress = (goal: any): number => {
         if (!allFlights) return 0
+
         let relevantFlights = allFlights
         if (goal.start_date) {
             relevantFlights = relevantFlights.filter(f => f.flight_date >= goal.start_date)
@@ -81,8 +87,24 @@ export default async function DashboardPage() {
         if (goal.end_date) {
             relevantFlights = relevantFlights.filter(f => f.flight_date <= goal.end_date)
         }
+
+        if (goal.objective_type === 'distance') {
+            const unit = (goal.target_distance_unit as 'km' | 'nm' | 'mi') || distanceUnit
+            const sum = relevantFlights.reduce((total, f) => {
+                if (!f.distance_value || !f.distance_unit) return total
+                return total + convertDistance(f.distance_value, f.distance_unit, unit)
+            }, 0)
+            return Math.min(sum, goal.target_distance ?? 0)
+        }
+
+        if (goal.objective_type === 'flight_count') {
+            const count = relevantFlights.length
+            return Math.min(count, goal.target_flight_count ?? 0)
+        }
+
+        // Default: time-based
         const sumMinutes = relevantFlights.reduce((sum, log) => sum + (log.duration_minutes || 0), 0)
-        return Math.min(sumMinutes, goal.target_minutes) // progress calculation maxed at target
+        return Math.min(sumMinutes, goal.target_minutes)
     }
 
     const focusGoalWithProgress = focusGoal ? {
@@ -101,6 +123,7 @@ export default async function DashboardPage() {
             focusGoal={focusGoalWithProgress}
             activeGoals={activeGoalsWithProgress}
             recentFlights={recentFlights || []}
+            distanceUnit={distanceUnit}
         />
     )
 }

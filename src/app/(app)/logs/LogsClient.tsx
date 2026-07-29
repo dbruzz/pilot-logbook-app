@@ -243,7 +243,7 @@ export default function LogsClient({
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <label className="text-sm font-medium">{t.logs.associatedGoals}</label>
                         {activeGoals.length === 0 ? (
                             <p className="text-sm text-muted-foreground">{t.logs.noActiveGoals}</p>
@@ -262,7 +262,7 @@ export default function LogsClient({
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">{t.logs.flightType}</label>

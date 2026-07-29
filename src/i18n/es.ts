@@ -106,9 +106,12 @@ export const es = {
         objectiveTypes: {
             time: 'Tiempo',
             distance: 'Distancia',
+            flight_count: 'Cantidad de vuelos',
         },
         targetDistance: 'Distancia objetivo',
         targetDistanceRequired: 'Ingresá una distancia mayor a 0.',
+        targetFlightCount: 'Cantidad de vuelos objetivo',
+        targetFlightCountRequired: 'Ingresá una cantidad de vuelos mayor a 0.',
     },
     logs: {
         title: 'Registro de Vuelos',
