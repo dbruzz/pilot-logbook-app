@@ -49,6 +49,8 @@ export const en = {
     },
     dashboard: {
         totalHours: 'Total Hours',
+        totalDistance: 'Total Distance',
+        totalFlights: 'Total Flights',
         total: 'Total',
         byAircraft: 'By Aircraft',
         unknownAircraft: 'Unknown Aircraft',
@@ -106,9 +108,12 @@ export const en = {
         objectiveTypes: {
             time: 'Time',
             distance: 'Distance',
+            flight_count: 'Flight Count',
         },
         targetDistance: 'Target distance',
         targetDistanceRequired: 'Enter a distance greater than 0.',
+        targetFlightCount: 'Target number of flights',
+        targetFlightCountRequired: 'Enter a flight count greater than 0.',
     },
     logs: {
         title: 'Flight Logs',

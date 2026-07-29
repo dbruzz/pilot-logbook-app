@@ -36,7 +36,7 @@ export async function updateSettings(formData: FormData) {
 
     const { error } = await supabase
         .from('user_settings')
-        .update({
+        .upsert({
             language_id: language_id_str ? parseInt(language_id_str, 10) : null,
             theme,
             notifications_enabled,

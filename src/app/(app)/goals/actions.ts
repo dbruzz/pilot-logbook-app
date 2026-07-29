@@ -10,7 +10,6 @@ export async function createGoal(formData: FormData) {
 
     const title = formData.get('title') as string
     const description = formData.get('description') as string
-    const target_minutes = parseInt(formData.get('target_minutes') as string, 10)
     const start_date = formData.get('start_date') as string || null
     const end_date = formData.get('end_date') as string || null
     const rawGoalType = formData.get('goal_type') as string || ''
@@ -19,11 +18,32 @@ export async function createGoal(formData: FormData) {
         ? (formData.get('custom_goal_type') as string || null)
         : null
 
+    // Objective type: 'time' | 'distance' | 'flight_count'
+    const objective_type = (formData.get('objective_type') as string) || 'time'
+
+    let target_minutes = 0
+    let target_distance: number | null = null
+    let target_distance_unit: string | null = null
+    let target_flight_count: number | null = null
+
+    if (objective_type === 'distance') {
+        target_distance = parseFloat(formData.get('target_distance') as string) || 0
+        target_distance_unit = (formData.get('target_distance_unit') as string) || 'km'
+    } else if (objective_type === 'flight_count') {
+        target_flight_count = parseInt(formData.get('target_flight_count') as string, 10) || 0
+    } else {
+        target_minutes = parseInt(formData.get('target_minutes') as string, 10) || 0
+    }
+
     const { error } = await supabase.from('goals').insert({
         user_id: user.id,
         title,
         description,
         target_minutes,
+        objective_type,
+        target_distance,
+        target_distance_unit,
+        target_flight_count,
         start_date,
         end_date,
         goal_type,
@@ -45,7 +65,6 @@ export async function updateGoal(id: number, formData: FormData) {
 
     const title = formData.get('title') as string
     const description = formData.get('description') as string
-    const target_minutes = parseInt(formData.get('target_minutes') as string, 10)
     const start_date = formData.get('start_date') as string || null
     const end_date = formData.get('end_date') as string || null
     const status_id = parseInt(formData.get('status_id') as string, 10)
@@ -55,12 +74,32 @@ export async function updateGoal(id: number, formData: FormData) {
         ? (formData.get('custom_goal_type') as string || null)
         : null
 
+    const objective_type = (formData.get('objective_type') as string) || 'time'
+
+    let target_minutes = 0
+    let target_distance: number | null = null
+    let target_distance_unit: string | null = null
+    let target_flight_count: number | null = null
+
+    if (objective_type === 'distance') {
+        target_distance = parseFloat(formData.get('target_distance') as string) || 0
+        target_distance_unit = (formData.get('target_distance_unit') as string) || 'km'
+    } else if (objective_type === 'flight_count') {
+        target_flight_count = parseInt(formData.get('target_flight_count') as string, 10) || 0
+    } else {
+        target_minutes = parseInt(formData.get('target_minutes') as string, 10) || 0
+    }
+
     const { error } = await supabase
         .from('goals')
         .update({
             title,
             description,
             target_minutes,
+            objective_type,
+            target_distance,
+            target_distance_unit,
+            target_flight_count,
             start_date,
             end_date,
             status_id,

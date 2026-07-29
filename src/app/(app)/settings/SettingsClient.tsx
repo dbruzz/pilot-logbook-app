@@ -118,7 +118,8 @@ export default function SettingsClient({
             if (selectedLang) setLanguage(selectedLang.description as 'en' | 'es')
         }
 
-        // Persist display preferences to localStorage for use in other pages
+        // Update local display preferences immediately.
+        // The source of truth is still persisted in user_settings through updateSettings.
         saveDisplayPreferences({
             durationFormat: (formData.get('duration_format') as 'hhmm' | 'decimal') ?? 'hhmm',
             distanceUnit: (formData.get('distance_unit') as 'km' | 'nm' | 'mi') ?? 'km',

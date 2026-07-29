@@ -19,5 +19,30 @@ export function formatDuration(
     return `${h}:${String(m).padStart(2, '0')}`
 }
 
+/**
+ * Conversion factors: each unit → km
+ */
+const TO_KM: Record<string, number> = { km: 1, nm: 1.852, mi: 1.60934 }
+
+/**
+ * Converts a distance value from one unit to another.
+ * Falls back to the original value if a unit is unrecognised.
+ */
+export function convertDistance(value: number, from: string, to: string): number {
+    if (from === to) return value
+    const factor = (TO_KM[from] ?? 1) / (TO_KM[to] ?? 1)
+    return value * factor
+}
+
+/**
+ * Formats a distance value with its unit label.
+ * NM is shown in uppercase; km and mi in lowercase.
+ */
+export function formatDistance(value: number, unit: 'km' | 'nm' | 'mi'): string {
+    const display = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
+    const label = unit === 'nm' ? 'NM' : unit
+    return `${display} ${label}`
+}
+
 export type DurationFormat = 'hhmm' | 'decimal'
 export type DistanceUnit = 'km' | 'nm' | 'mi'
