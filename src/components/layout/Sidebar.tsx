@@ -48,12 +48,12 @@ export function Sidebar() {
                 })}
             </nav>
 
-            <div className="p-4 mt-auto">
+            {/* <div className="p-4 mt-auto">
                 <div className="bg-secondary/50 rounded-2xl p-4 text-sm text-center">
                     <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase mb-1">Version</p>
                     <p className="font-semibold">0.1.0 MVP</p>
                 </div>
-            </div>
+            </div> */}
         </aside>
     )
 }
